@@ -52,21 +52,47 @@ ax.scatter(X[:, 0], X[:, 1], c=Y.flatten(), cmap="viridis")
 ax.set_title("Dataset")
 plt.show()
 
+#descomponer x en sus valores singulares
+U, S, Vt = np.linalg.svd(X)
+
+# Reducir la dimensión de la representación
+d_values = [2, 6, 10, X.shape[1]]
+for d in d_values:
+    # Reducción de la dimensión de la representación
+    Z = np.dot(X, Vt[:d].T)
+
+    # 1.3 Proyección de los vectores x al nuevo espacio reducido Z
+    fig, ax = plt.subplots()
+    ax.scatter(Z[:, 0], Z[:, 1], c=Y.flatten(), cmap="viridis")
+    ax.set_title(f"PCA d={d}")
+    plt.show()
+
+    # 1. Determinar la similaridad par-a-par entre muestras en el espacio de dimension X y en el espacio
+    # de dimensión reducida d para distintos valores de d utilizando PCA. Comparar estas medidas de
+    # similaridad. Ayuda: ver de utilizar una matriz de similaridad para visualizar todas las similaridades
+    # par-a-par juntas.
+    pca = PCA(n_components=d)
+    Z = pca.fit_transform(X)
+    similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
+    similarity_Z = np.exp(-np.linalg.norm(Z - Z[:, None], axis=2)**2 / (2 * 1))
+
+    fig, ax = plt.subplots(1, 2)
+    ax[0].imshow(similarity_X, cmap="viridis")
+    ax[0].set_title("Similarity X")
+    ax[1].imshow(similarity_Z, cmap="viridis")
+    ax[1].set_title(f"Similarity Z d={d}")
+    # titulo 
+    plt.show()
+
+    # 2. De las p dimensiones originales del dataset, cuales son las mas representativas con respecto a las
+    # dimensiones d obtenidas por SVD? Indicar que dimensiones originales del conjunto p son las mas
+    # importantes y el método utilizado para determinarlas.
+    pca = PCA(n_components=d)
+    pca.fit(X)
+    # print(f"PCA components d={d}: {pca.components_}")
+
 # Suponemos que las muestras no se distribuyen uniformemente en el espacio Rp, por lo que podremos encontrar grupos de muestras (clusters) con alta similaridad entre sí. La similaridad entre un par de muestras xi, xj se puede medir utilizando una función no-lineal de su distancia euclidiana
 # K (xi, xj) = exp(-∥xi - xj∥_2)^2/ (2σ^2)),
-
-# medir la similaridad entre un par de muestras xi, xj
-def similarity(xi, xj, sigma=1):
-    return np.exp(-np.linalg.norm(xi - xj)**2 / (2 * sigma**2))
-
-# Similaridad entre todas las muestras
-similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
-
-# mostrar la matriz de similaridad
-fig, ax = plt.subplots()
-ax.imshow(similarity_X, cmap="viridis")
-ax.set_title("Similarity X")
-plt.show()
 
 
 
