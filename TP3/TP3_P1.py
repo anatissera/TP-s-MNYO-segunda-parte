@@ -43,7 +43,7 @@ from sklearn.metrics import mean_squared_error
 
 # Load dataset
 # X = pd.read_csv("dataset02.csv").to_numpy() primer linea cuenta las columnas, saltarla
-X = pd.read_csv("dataset02.csv", skiprows=1).to_numpy()
+X = pd.read_csv("TP3\dataset02.csv", skiprows=1).to_numpy()
 Y = pd.read_csv("y.txt").to_numpy()
 
 # Graficar las muestras de la primer columna de X

@@ -39,7 +39,7 @@ from PIL import Image
 # cargar las imagenes
 images = []
 for i in range(19):
-    img = Image.open(f"datasets_imgs/img{i}.jpeg")
+    img = Image.open(f"TP3\datasets_imgs/img{i}.jpeg")
     img = img.resize((100, 100))
     img = np.array(img)
     images.append(img)
