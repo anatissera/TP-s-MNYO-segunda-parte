@@ -39,7 +39,7 @@ from PIL import Image
 # cargar las imagenes
 images = []
 for i in range(19):
-    img = Image.open(f"datasets_imgs/img{i}.jpeg")
+    img = Image.open(f"TP3\datasets_imgs/img{i}.jpeg")
     img = img.resize((100, 100))
     img = np.array(img)
     images.append(img)
@@ -68,14 +68,72 @@ ax.plot(S)
 ax.set_title("Valores singulares")
 plt.show()
 
+# medir la similaridad entre un par de muestras xi, xj
+def similarity(xi, xj, sigma=1):
+    return np.exp(-np.linalg.norm(xi - xj)**2 / (2 * sigma**2))
+
+def error_approximation(X, X_reconstructed):
+    # Error =
+# ‖𝑋𝑖 − ̃ 𝑋𝑖‖𝐹 /
+# ‖𝑋𝑖‖𝐹
+   return (np.linalg.norm(X - X_reconstructed, ord=2) / np.linalg.norm(X, ord=2))*100
+
 # Visualizar en forma matricial p × p las imágenes reconstruidas luego de compresión con distintos valores de d dimensiones ¿Qué conclusiones pueden sacar?
-d_values = [2, 6, 10, 50]
-fig, axs = plt.subplots(2, 2)
+d_values = [2, 6, 10,14, 16, 50]
+fig, axs = plt.subplots(2, 3)
 for d, ax in zip(d_values, axs.flatten()):
     Z = np.dot(X, Vt[:d].T)
     X_reconstructed = np.dot(Z, Vt[:d])
     images_reconstructed = X_reconstructed.reshape(n, p, p)
     ax.imshow(images_reconstructed[0], cmap="gray")
-    ax.axis("off")
-    ax.set_title(f"d={d}")
+    # mostrar el porcentaje de error en cada imagen
+    error = error_approximation(X[0], X_reconstructed[0])
+    ax.set_title(f"d={d} error={error:.2f}%")
 plt.show()
+
+# Graficar porcentaje de error de aproximacion para cada una de las imagenes a las que se les aplico SVD truncado con d = 6
+d = 6
+Z = np.dot(X, Vt[:d].T)
+X_reconstructed = np.dot(Z, Vt[:d])
+images_reconstructed = X_reconstructed.reshape(n, p, p)
+
+# Calcular el porcentaje de error de aproximacion
+error = []
+for i in range(n):
+    error.append(error_approximation(X[i], X_reconstructed[i]))
+
+
+# Graficar en barras el error de aproximacion
+fig, ax = plt.subplots()
+ax.bar(range(n), error)
+ax.set_title("Error de aproximación")
+plt.show()
+
+
+#analizar similaridad entre los distintos valores de d
+# for d in d_values:
+#     Z = np.dot(X, Vt[:d].T)
+#     similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
+#     similarity_Z = np.exp(-np.linalg.norm(Z - Z[:, None], axis=2)**2 / (2 * 1))
+
+#     fig, ax = plt.subplots(1, 2)
+#     ax[0].imshow(similarity_X, cmap="viridis")
+#     ax[0].set_title("Similarity X")
+#     ax[1].imshow(similarity_Z, cmap="viridis")
+#     ax[1].set_title(f"Similarity Z d={d}")
+#     plt.show()
+
+# Utilizando compresión con distintos valores de d medir la similaridad entre pares de imágenes (con alguna métrica de similaridad que decida el autor) en un espacio de baja dimensión d. Analizar cómo la similaridad entre pares de imágenes cambia a medida que se utilizan distintos valores de d. Cuales imágenes se encuentran cerca entre si? Alguna interpretación al respecto? Ayuda: ver de utilizar una matriz de similaridad para visualizar todas las similaridades par-a-par juntas.
+
+# # medir la similaridad entre un par de muestras xi, xj
+# def similarity(xi, xj, sigma=1):
+#     return np.exp(-np.linalg.norm(xi - xj)**2 / (2 * sigma**2))
+
+# # Similaridad entre todas las muestras
+# similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
+
+# # mostrar la matriz de similaridad
+# fig, ax = plt.subplots()
+# ax.imshow(similarity_X, cmap="viridis")
+# ax.set_title("Similarity X")
+# plt.show()
