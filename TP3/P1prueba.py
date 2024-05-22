@@ -1,16 +1,15 @@
-
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA # Análisis de Componentes Principales
 #  identifica los componentes principales de los datos -> los vectores ortogonales 
 # no correlacionados entre sí y ordenados jerárquicamente que maximizan la varianza 𝜎^2 de las mediciones
 # emplea SVD para calcular los componentes principales
-
-import pandas as pd
-from scipy.spatial.distance import pdist, squareform
-from scipy.linalg import svd
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, euclidean_distances
+from scipy.spatial.distance import pdist, squareform
+from numpy.linalg import svd
 
 
 # La similaridad entre un par de muestras xi, xj se puede medir utilizando una función no-lineal de su distancia euclidiana
@@ -54,36 +53,129 @@ from sklearn.metrics import mean_squared_error
 #         plt.show()
         
         
-        
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from scipy.spatial.distance import pdist, squareform
 
-# Cargar datos
-# X = pd.read_csv('TP3\dataset02.csv').values
-# Y = pd.read_csv('TP3\y.txt').values.ravel()
+
+
+# X = pd.read_csv('dataset.csv').values
+# y = pd.read_csv('y.txt').values
 
 X = pd.read_csv("TP3/dataset02.csv", skiprows=1).to_numpy()
 Y = pd.read_csv("TP3/y.txt").to_numpy().ravel()
+dims = [2, 6, 10, X.shape[1]]
+# dims = [2, 6, 10]
 
-# Función para calcular la similaridad
+# SVD y PCA
+U, S, Vt = np.linalg.svd(X, full_matrices=False)
+V = Vt.T
+
+# Matrices de similaridad separadas
+def plot_similarity_matrix(K, title):
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(K, cmap='viridis')
+    plt.title(title)
+    plt.show()
+    
+
+def graficar_similaridad(similarity_matrices, titles, errors, separado = False):
+    errors = []
+    for d in [2, 6, 10, X.shape[1]]:
+        Vd = V[:, :d]
+        Z = np.dot(X, Vd)
+
+        # similaridad en espacio reducido
+        K_Z = np.exp(-euclidean_distances(Z, Z)**2 / (2 * np.var(Z)))
+        if separado:
+            plot_similarity_matrix(K_Z, f"Matriz de Similaridad en el Espacio Reducido (d={d})")
+     
+        similarity_matrices.append(K_Z)
+        titles.append(f"Matriz de Similaridad en el Espacio Reducido (d={d})")
+        
+        # regresión lineal en el espacio reducido
+        # pca = PCA(n_components=d)
+        # Z_d = pca.fit_transform(X)
+        model = LinearRegression().fit(Z, Y)
+        y_pred = model.predict(Z)
+        error = mean_squared_error(Y, y_pred)
+        errors.append((d, error))
+        # print(f"Dimensión reducida a {d}, error de predicción: {error}")
+        
+    if not separado:
+        return similarity_matrices, titles, errors
+
+
+# en subplots
+def plot_similarity_matrices(matrices, titles):
+    fig, axs = plt.subplots(2, 2, figsize=(30, 16))
+    axs = axs.flatten()
+    for ax, K, title in zip(axs, matrices, titles):
+        sns.heatmap(K, cmap='viridis', ax=ax)
+        ax.set_title(title)
+        ax.tick_params(axis='both', which='major', labelsize=4) 
+        
+    # plt.tight_layout()
+    plt.subplots_adjust(hspace=0.4, wspace=0.2)
+    plt.show()
+
+
+def original(X, Y, bool = True):
+    # similaridad 
+    if bool:
+        K_X = np.exp(-euclidean_distances(X, X)**2 / (2 * np.var(X)))
+    else:
+        K_X = calculate_similarity(X, sigma)
+    # regresión lineal
+    model = LinearRegression().fit(X, Y)
+    y_pred = model.predict(X)
+    error = mean_squared_error(Y, y_pred)
+    
+    return K_X, error
+
+
+   
+# Visualización de los componentes principales
+def componentes_principales(dims, X):
+    fig, axes = plt.subplots(3, 1, figsize=(10, 15))
+
+    for i, d in enumerate(dims[:-1]):
+        pca = PCA(n_components=d)
+        pca.fit(X)
+        components = pca.components_
+        sns.heatmap(components, ax=axes[i], cmap='coolwarm', center=0)
+        axes[i].set_title(f'Componentes Principales para d={d}')
+        axes[i].set_xlabel('Dimensiones Originales')
+        axes[i].set_ylabel('Componentes Principales')
+
+    plt.subplots_adjust(hspace=1)
+    # plt.tight_layout()
+    plt.show()
+    
+# Gráfico de errores de predicción
+def errores_prediccion(errors, dims):
+    dims_labels = [str(d) for d in dims]
+    errors_values = [error for _, error in errors]
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(dims_labels, errors_values, color='skyblue')
+    plt.xlabel('Dimensiones Reducidas')
+    plt.ylabel('Error de Predicción (MSE)')
+    plt.title('Errores de Predicción para Diferentes Dimensiones')
+    plt.show()
+
+
+
+# otra manera con la fórmula de similaridad del enunciado (?
+# y con     pca = PCA(n_components=d)
+#           Z_d = pca.fit_transform(X)
+
 def calculate_similarity(X, sigma):
     pairwise_sq_dists = squareform(pdist(X, 'sqeuclidean'))
     K = np.exp(-pairwise_sq_dists / (2 * sigma ** 2))
     return K
 
-sigma = 1.0  # ajustar según sea necesario
+sigma = 1.0     # ajustar 
 
-# Similaridad en el espacio original
-K_X = calculate_similarity(X, sigma)
 
 # PCA y similaridades en espacios reducidos
-dims = [2, 6, 10]
 similarities = {}
 for d in dims:
     pca = PCA(n_components=d)
@@ -92,7 +184,7 @@ for d in dims:
     similarities[d] = K_Z_d
 
 # Error de predicción
-errors = []
+errors_2 = []
 for d in dims:
     pca = PCA(n_components=d)
     Z_d = pca.fit_transform(X)
@@ -100,54 +192,54 @@ for d in dims:
     model.fit(Z_d, Y)
     Y_pred = model.predict(Z_d)
     error = mean_squared_error(Y, Y_pred)
-    errors.append((d, error))
+    errors_2.append((d, error))
 
-# Error de predicción en el espacio original
-model_original = LinearRegression()
-model_original.fit(X, Y)
-Y_pred_original = model_original.predict(X)
-error_original = mean_squared_error(Y, Y_pred_original)
-errors.append(('Original', error_original))
 
-# Graficar matrices de similaridad
-fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+def similarity_matrix_conheatmap(K_X, similarities):
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
 
-sns.heatmap(K_X, ax=axes[0, 0], cmap='viridis')
-axes[0, 0].set_title('Similaridad en el Espacio Original')
+    sns.heatmap(K_X, ax=axes[0, 0], cmap='viridis')
+    axes[0, 0].set_title('Similaridad en el Espacio Original')
 
-for i, d in enumerate(dims):
-    row = (i + 1) // 2
-    col = (i + 1) % 2
-    sns.heatmap(similarities[d], ax=axes[row, col], cmap='viridis')
-    axes[row, col].set_title(f'Similaridad en el Espacio Reducido d={d}')
+    for i, d in enumerate(dims[:-1]):
+        row = (i + 1) // 2
+        col = (i + 1) % 2
+        sns.heatmap(similarities[d], ax=axes[row, col], cmap='viridis')
+        axes[row, col].set_title(f'Similaridad en el Espacio Reducido d={d}')
 
-plt.subplots_adjust(hspace=1.5, wspace=0.5)
-plt.tight_layout()
-plt.show()
+    plt.subplots_adjust(hspace=1.5, wspace=0.5)
+    plt.tight_layout()
+    plt.show()
 
-# Visualización de los componentes principales
-fig, axes = plt.subplots(3, 1, figsize=(10, 15))
 
-for i, d in enumerate(dims):
-    pca = PCA(n_components=d)
-    pca.fit(X)
-    components = pca.components_
-    sns.heatmap(components, ax=axes[i], cmap='coolwarm', center=0)
-    axes[i].set_title(f'Componentes Principales para d={d}')
-    axes[i].set_xlabel('Dimensiones Originales')
-    axes[i].set_ylabel('Componentes Principales')
+def main():
+    
+    K_X, error = original(X, Y)
+    similarity_matrices_og = [K_X]
+    titles_og = ["Matriz de Similaridad en el Espacio Original"]
+    errors_og = [('Original', error)]
 
-plt.subplots_adjust(hspace=1)
-# plt.tight_layout()
-plt.show()
+    similarity_matrices, titles, errors = graficar_similaridad(similarity_matrices_og, titles_og, errors_og)
 
-# Gráfico de errores de predicción
-dims_labels = [str(d) for d in dims] + ['Original']
-errors_values = [error for _, error in errors]
+    # similaridad
+    #varios subplots
+    plot_similarity_matrices(similarity_matrices, titles)
 
-plt.figure(figsize=(10, 6))
-plt.bar(dims_labels, errors_values, color='skyblue')
-plt.xlabel('Dimensiones Reducidas')
-plt.ylabel('Error de Predicción (MSE)')
-plt.title('Errores de Predicción para Diferentes Dimensiones')
-plt.show()
+    #separado
+    # plot_similarity_matrix(K_X, "Matriz de Similaridad en el Espacio Original")
+    # graficar_similaridad(similarity_matrices_og, titles_og, True)
+    
+    errores_prediccion(errors, dims)
+    errores_prediccion(errors_2, dims) # ?
+    componentes_principales(dims, X)
+    
+    
+    # con otro método
+    # K_X, error = original(X, Y, False)
+    # similarity_matrices_og = [K_X]
+    # errors_og = [('Original', error)]
+
+    # similarity_matrix_conheatmap(K_X, similarities)
+
+if __name__ == "__main__":
+    main()
