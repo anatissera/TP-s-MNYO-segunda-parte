@@ -68,6 +68,77 @@ dims = [2, 6, 10, X.shape[1]]
 U, S, Vt = np.linalg.svd(X, full_matrices=False)
 V = Vt.T
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import pandas as pd
+import numpy as np
+
+# Cargar el dataset
+dataset = pd.read_csv('TP3/dataset02.csv')
+
+# Normalización de cada columna
+normalized_dataset = (dataset - dataset.min()) / (dataset.max() - dataset.min())
+
+# Aplicar SVD
+U, S, Vt = np.linalg.svd(normalized_dataset, full_matrices=False)
+V = Vt.T
+
+
+# Graficar la matriz U
+plt.figure(figsize=(10, 8))
+sns.heatmap(U, cmap='coolwarm')
+plt.title('Matriz U')
+plt.show()
+
+# Graficar los valores singulares S
+plt.figure(figsize=(10, 4))
+plt.plot(S, marker='o')
+plt.title('Valores Singulares')
+plt.xlabel('Índice')
+plt.ylabel('Valor Singular')
+plt.show()
+
+# Graficar la matriz V^*
+plt.figure(figsize=(10, 8))
+sns.heatmap(Vt, cmap='coolwarm')
+plt.title('Matriz V^*')
+plt.show()
+
+
+
+from sklearn.decomposition import PCA
+
+# Valores de d para reducción de dimensionalidad
+d_values = [2, 6, 10, normalized_dataset.shape[1]]
+
+for d in d_values:
+    pca = PCA(n_components=d)
+    reduced_data_pca = pca.fit_transform(normalized_dataset)
+    
+    # Calcular matriz de similaridad en el espacio reducido
+    sim_matrix_pca = np.exp(-euclidean_distances(reduced_data_pca, reduced_data_pca)**2 / (2 * np.var(reduced_data_pca)))
+    
+    # Graficar la matriz de similaridad
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(sim_matrix_pca, cmap='viridis')
+    plt.title(f'PCA: Matriz de Similaridad reducida (d={d})')
+    plt.show()
+
+
+# Similaridad con SVD
+for d in d_values:
+    Z = np.dot(U[:, :d], np.diag(S[:d]))
+    
+    # Calcular matriz de similaridad en el espacio reducido
+    sim_matrix_svd = np.exp(-euclidean_distances(Z, Z)**2 / (2 * np.var(Z)))
+    
+    # Graficar la matriz de similaridad
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(sim_matrix_svd, cmap='viridis')
+    plt.title(f'SVD: Matriz de Similaridad reducida (d={d})')
+    plt.show()
+
 # Matrices de similaridad separadas
 def plot_similarity_matrix(K, title):
     plt.figure(figsize=(10, 8))
