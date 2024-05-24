@@ -74,8 +74,9 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
-# Cargar el dataset
-dataset = pd.read_csv('TP3/dataset02.csv')
+
+# dataset = pd.read_csv('TP3/dataset02.csv')
+dataset = pd.read_csv("TP3\dataset02.csv", skiprows=1)
 
 # Normalización de cada columna
 normalized_dataset = (dataset - dataset.min()) / (dataset.max() - dataset.min())
@@ -91,28 +92,68 @@ sns.heatmap(U, cmap='coolwarm')
 plt.title('Matriz U')
 plt.show()
 
-# Graficar los valores singulares S
-plt.figure(figsize=(10, 4))
-plt.plot(S, marker='o')
-plt.title('Valores Singulares')
-plt.xlabel('Índice')
-plt.ylabel('Valor Singular')
+# # Graficar los valores singulares S
+# plt.figure(figsize=(10, 4))
+# plt.plot(S, marker='o')
+# # plt.yscale('log')
+# plt.title('Valores Singulares')
+# plt.xlabel('Índice')
+# plt.ylabel('Valor Singular')
+# plt.show()
+
+from brokenaxes import brokenaxes
+
+# plt.figure(figsize=(10, 4))
+# plt.semilogy(S, marker='o')
+# plt.title('Valores Singulares (Escala Semi-Logarítmica)')
+# plt.xlabel('Índice (i)')
+# plt.ylabel('Valor Singular ($\sigma_i$)')
+
+# plt.show()
+
+fig = plt.figure(figsize=(10, 4))
+bax = brokenaxes(ylims=((1.8302e-15, 2.33357e-13), (1.8, 440)), hspace=0.1)
+bax.semilogy(S, marker='o')
+bax.set_title('Valores Singulares')
+bax.set_xlabel('Índice (i)')
+bax.set_ylabel('Valor Singular ($\sigma_i$)')
 plt.show()
+
+# plt.figure(figsize=(10, 4))
+# plt.semilogy(S, marker='o')
+# plt.title('Valores Singulares (Escala Semi-Logarítmica)')
+# plt.xlabel('Índice (i)')
+# plt.ylabel('Valor Singular ($\sigma_i$)')
+
+# plt.show()
+
+# from brokenaxes import brokenaxes
+
+# # Graficar los valores singulares S con ejes interrumpidos
+# fig = plt.figure(figsize=(10, 4))
+# bax = brokenaxes(ylims=((0, 45), (230, 250)), hspace=0.1)
+# bax.plot(range(len(S)), S, marker='o')
+# bax.set_title('Valores Singulares')
+# bax.set_xlabel('Índice')
+# bax.set_ylabel('Valor Singular')
+# plt.show()
 
 # Graficar la matriz V^*
 plt.figure(figsize=(10, 8))
 sns.heatmap(Vt, cmap='coolwarm')
-plt.title('Matriz V^*')
+plt.title('Matriz V*')
 plt.show()
 
 
-
 from sklearn.decomposition import PCA
+from sklearn.metrics import euclidean_distances
 
 # Valores de d para reducción de dimensionalidad
 d_values = [2, 6, 10, normalized_dataset.shape[1]]
 
-for d in d_values:
+fig, axes = plt.subplots(2, 2, figsize=(20, 15))
+
+for ax, d in zip(axes.flatten(), d_values):
     pca = PCA(n_components=d)
     reduced_data_pca = pca.fit_transform(normalized_dataset)
     
@@ -120,24 +161,32 @@ for d in d_values:
     sim_matrix_pca = np.exp(-euclidean_distances(reduced_data_pca, reduced_data_pca)**2 / (2 * np.var(reduced_data_pca)))
     
     # Graficar la matriz de similaridad
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(sim_matrix_pca, cmap='viridis')
-    plt.title(f'PCA: Matriz de Similaridad reducida (d={d})')
-    plt.show()
+    sns.heatmap(sim_matrix_pca, cmap='viridis', ax=ax)
+    ax.set_title(f'PCA: Matriz de Similaridad reducida (d={d})')
+    ax.tick_params(axis='both', which='major', labelsize=4)
+
+# plt.tight_layout()
+plt.subplots_adjust(hspace=0.4, wspace=0.2)
+plt.show()
 
 
-# Similaridad con SVD
-for d in d_values:
+fig, axes = plt.subplots(2, 2, figsize=(20, 15))
+
+for ax, d in zip(axes.flatten(), d_values):
     Z = np.dot(U[:, :d], np.diag(S[:d]))
     
     # Calcular matriz de similaridad en el espacio reducido
     sim_matrix_svd = np.exp(-euclidean_distances(Z, Z)**2 / (2 * np.var(Z)))
     
     # Graficar la matriz de similaridad
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(sim_matrix_svd, cmap='viridis')
-    plt.title(f'SVD: Matriz de Similaridad reducida (d={d})')
-    plt.show()
+    sns.heatmap(sim_matrix_svd, cmap='viridis', ax=ax)
+    ax.set_title(f'SVD: Matriz de Similaridad reducida (d={d})')
+    ax.tick_params(axis='both', which='major', labelsize=4)
+
+# plt.tight_layout()
+plt.subplots_adjust(hspace=0.4, wspace=0.2)
+plt.show()
+
 
 # Matrices de similaridad separadas
 def plot_similarity_matrix(K, title):
