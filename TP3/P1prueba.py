@@ -101,8 +101,7 @@ plt.show()
 # plt.ylabel('Valor Singular')
 # plt.show()
 
-from brokenaxes import brokenaxes
-
+# # escala semi-logarítmica
 # plt.figure(figsize=(10, 4))
 # plt.semilogy(S, marker='o')
 # plt.title('Valores Singulares (Escala Semi-Logarítmica)')
@@ -111,14 +110,44 @@ from brokenaxes import brokenaxes
 
 # plt.show()
 
+from brokenaxes import brokenaxes
+
+sigma = S
 fig = plt.figure(figsize=(10, 4))
-bax = brokenaxes(ylims=((1.8302e-15, 2.33357e-13), (1.8, 440)), hspace=0.1)
-bax.semilogy(S, marker='o')
+bax = brokenaxes(ylims=((1e-16, 1e-12), (3.5, 250)), hspace=0.1)
+bax.semilogy(range(1, len(sigma) + 1), sigma, 'o-')
 bax.set_title('Valores Singulares')
 bax.set_xlabel('Índice (i)')
 bax.set_ylabel('Valor Singular ($\sigma_i$)')
 plt.show()
 
+# Graficar los valores singulares en escala semilogarítmica
+plt.figure(figsize=(10, 6))
+plt.semilogy(range(1, len(sigma) + 1), sigma, 'o-')
+plt.xlabel('Índice (i)')
+plt.ylabel('Valores singulares ($\sigma_i$)')
+plt.title('Valores singulares $\{\sigma_i\}_{i=1}^{106}$ de $A$ en escala semilogarítmica')
+plt.grid(True)
+plt.show()
+
+# Calcular la proporción acumulada de la suma de los valores singulares
+proporcion_acumulada = np.cumsum(sigma) / np.sum(sigma)
+
+# Graficar la proporción acumulada
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, len(sigma) + 1), proporcion_acumulada, 'o-')
+plt.axhline(y=0.5, color='r', linestyle='--')
+plt.axvline(x=np.argmax(proporcion_acumulada >= 0.5) + 1, color='r', linestyle='--')
+plt.text(np.argmax(proporcion_acumulada >= 0.5) + 1, 0.5, f'r={np.argmax(proporcion_acumulada >= 0.5) + 1}', 
+         color='purple', ha='right')
+plt.xlabel('r')
+plt.ylabel('$\sum_{i=1}^{r} \sigma_i / \sum_{i=1}^{106} \sigma_i$')
+plt.title('Proporción de la suma acumulada de $\{\sigma_i\}_{i=1}^{106}$ de $A$')
+plt.grid(True)
+plt.show()
+
+
+
 # plt.figure(figsize=(10, 4))
 # plt.semilogy(S, marker='o')
 # plt.title('Valores Singulares (Escala Semi-Logarítmica)')
@@ -127,21 +156,23 @@ plt.show()
 
 # plt.show()
 
-# from brokenaxes import brokenaxes
-
-# # Graficar los valores singulares S con ejes interrumpidos
-# fig = plt.figure(figsize=(10, 4))
-# bax = brokenaxes(ylims=((0, 45), (230, 250)), hspace=0.1)
-# bax.plot(range(len(S)), S, marker='o')
-# bax.set_title('Valores Singulares')
-# bax.set_xlabel('Índice')
-# bax.set_ylabel('Valor Singular')
-# plt.show()
 
 # Graficar la matriz V^*
 plt.figure(figsize=(10, 8))
 sns.heatmap(Vt, cmap='coolwarm')
 plt.title('Matriz V*')
+plt.show()
+
+
+
+XV = np.dot(X, V)
+
+# Graficar la matriz XV
+plt.figure(figsize=(12, 8))
+sns.heatmap(XV, cmap='coolwarm', cbar=True)
+plt.title('Matriz $XV$')
+plt.xlabel('Componentes')
+plt.ylabel('Muestras')
 plt.show()
 
 
