@@ -12,8 +12,13 @@ from scipy.spatial.distance import pdist, squareform
 from numpy.linalg import svd
 
 
+
+# hacer matriz de covarianza para PCA!
+
+
 # La similaridad entre un par de muestras xi, xj se puede medir utilizando una función no-lineal de su distancia euclidiana
 # K(xi, xj) = exp((-∥xi - xj∥_2)^2)/ (2σ^2))
+
 
 # reducir d -> 
 # 1) descomposición de X en sus valores singulares
@@ -54,8 +59,6 @@ from numpy.linalg import svd
         
         
 
-
-
 # X = pd.read_csv('dataset.csv').values
 # y = pd.read_csv('y.txt').values
 
@@ -64,66 +67,68 @@ Y = pd.read_csv("TP3/y.txt").to_numpy().ravel()
 dims = [2, 6, 10, X.shape[1]]
 # dims = [2, 6, 10]
 
-# SVD y PCA
-U, S, Vt = np.linalg.svd(X, full_matrices=False)
-V = Vt.T
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-import pandas as pd
-import numpy as np
+# SVD
+# U, S, Vt = np.linalg.svd(X, full_matrices=False)
+# V = Vt.T
 
 
 # dataset = pd.read_csv('TP3/dataset02.csv')
 dataset = pd.read_csv("TP3\dataset02.csv", skiprows=1)
 
-# Normalización de cada columna
-normalized_dataset = (dataset - dataset.min()) / (dataset.max() - dataset.min())
+# Normalización de cada columna para PCA
+normalized_dataset_martin = (dataset - dataset.min()) / (dataset.max() - dataset.min())
+normalized_dataset = dataset - dataset.mean()
 
 # Aplicar SVD
-U, S, Vt = np.linalg.svd(normalized_dataset, full_matrices=False)
+U, S, Vt = np.linalg.svd(normalized_dataset_martin, full_matrices=False)
 V = Vt.T
 
 
-# Graficar la matriz U
-plt.figure(figsize=(10, 8))
-sns.heatmap(U, cmap='coolwarm')
-plt.title('Matriz U')
-plt.show()
+def graficar_matrices(dataset):
+    
+    U, S, Vt = np.linalg.svd(dataset, full_matrices=False)
+    V = Vt.T
+    
+    # Graficar la matriz U
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(U, cmap='coolwarm')
+    plt.title('Matriz U')
+    plt.show()
 
-# # Graficar los valores singulares S
-# plt.figure(figsize=(10, 4))
-# plt.plot(S, marker='o')
-# # plt.yscale('log')
-# plt.title('Valores Singulares')
-# plt.xlabel('Índice')
-# plt.ylabel('Valor Singular')
-# plt.show()
+    # # Graficar los valores singulares S
+    plt.figure(figsize=(10, 4))
+    plt.plot(S, marker='o')
+    # plt.yscale('log')
+    plt.title('Valores Singulares')
+    plt.xlabel('Índice')
+    plt.ylabel('Valor Singular')
+    plt.show()
+    
+    # Graficar la matriz V^*
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(Vt, cmap='coolwarm')
+    plt.title('Matriz V*')
+    plt.show()
 
-# # escala semi-logarítmica
-# plt.figure(figsize=(10, 4))
-# plt.semilogy(S, marker='o')
-# plt.title('Valores Singulares (Escala Semi-Logarítmica)')
-# plt.xlabel('Índice (i)')
-# plt.ylabel('Valor Singular ($\sigma_i$)')
 
-# plt.show()
+    XV = np.dot(dataset, V)
 
-from brokenaxes import brokenaxes
+    # Graficar la matriz XV
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(XV, cmap='coolwarm', cbar=True)
+    plt.title('Matriz $T = AV$')
+    plt.xlabel('Componentes')
+    plt.ylabel('Muestras')
+    plt.show()
+    
+graficar_matrices(normalized_dataset)
+graficar_matrices(normalized_dataset_martin)
+graficar_matrices(X)
 
-sigma = S
-fig = plt.figure(figsize=(10, 4))
-bax = brokenaxes(ylims=((1e-16, 1e-12), (3.5, 250)), hspace=0.1)
-bax.semilogy(range(1, len(sigma) + 1), sigma, 'o-')
-bax.set_title('Valores Singulares')
-bax.set_xlabel('Índice (i)')
-bax.set_ylabel('Valor Singular ($\sigma_i$)')
-plt.show()
 
 # Graficar los valores singulares en escala semilogarítmica
 plt.figure(figsize=(10, 6))
-plt.semilogy(range(1, len(sigma) + 1), sigma, 'o-')
+plt.semilogy(range(1, len(S) + 1), S, 'o-')
 plt.xlabel('Índice (i)')
 plt.ylabel('Valores singulares ($\sigma_i$)')
 plt.title('Valores singulares $\{\sigma_i\}_{i=1}^{106}$ de $A$ en escala semilogarítmica')
@@ -131,53 +136,30 @@ plt.grid(True)
 plt.show()
 
 # Calcular la proporción acumulada de la suma de los valores singulares
-proporcion_acumulada = np.cumsum(sigma) / np.sum(sigma)
+proporcion_acumulada = np.cumsum(S) / np.sum(S)
 
 # Graficar la proporción acumulada
 plt.figure(figsize=(10, 6))
-plt.plot(range(1, len(sigma) + 1), proporcion_acumulada, 'o-')
+plt.plot(range(1, len(S) + 1), proporcion_acumulada, 'o-')
 plt.axhline(y=0.5, color='r', linestyle='--')
 plt.axvline(x=np.argmax(proporcion_acumulada >= 0.5) + 1, color='r', linestyle='--')
 plt.text(np.argmax(proporcion_acumulada >= 0.5) + 1, 0.5, f'r={np.argmax(proporcion_acumulada >= 0.5) + 1}', 
-         color='purple', ha='right')
+        color='purple', ha='right')
 plt.xlabel('r')
 plt.ylabel('$\sum_{i=1}^{r} \sigma_i / \sum_{i=1}^{106} \sigma_i$')
-plt.title('Proporción de la suma acumulada de $\{\sigma_i\}_{i=1}^{106}$ de $A$')
+plt.title('Varianza según dimensión: Proporción de la suma acumulada de $\{\sigma_i\}_{i=1}^{106}$ de $A$')
 plt.grid(True)
 plt.show()
 
 
 
-# plt.figure(figsize=(10, 4))
-# plt.semilogy(S, marker='o')
-# plt.title('Valores Singulares (Escala Semi-Logarítmica)')
-# plt.xlabel('Índice (i)')
-# plt.ylabel('Valor Singular ($\sigma_i$)')
+def calculate_similarity_matrix(dataset, sigma_squared):
+    dist_matrix = euclidean_distances(dataset, dataset)
+    
+    similarity_matrix = np.exp(-dist_matrix**2 / (2 * sigma_squared))
+    
+    return similarity_matrix
 
-# plt.show()
-
-
-# Graficar la matriz V^*
-plt.figure(figsize=(10, 8))
-sns.heatmap(Vt, cmap='coolwarm')
-plt.title('Matriz V*')
-plt.show()
-
-
-
-XV = np.dot(X, V)
-
-# Graficar la matriz XV
-plt.figure(figsize=(12, 8))
-sns.heatmap(XV, cmap='coolwarm', cbar=True)
-plt.title('Matriz $XV$')
-plt.xlabel('Componentes')
-plt.ylabel('Muestras')
-plt.show()
-
-
-from sklearn.decomposition import PCA
-from sklearn.metrics import euclidean_distances
 
 # Valores de d para reducción de dimensionalidad
 d_values = [2, 6, 10, normalized_dataset.shape[1]]
@@ -189,7 +171,7 @@ for ax, d in zip(axes.flatten(), d_values):
     reduced_data_pca = pca.fit_transform(normalized_dataset)
     
     # Calcular matriz de similaridad en el espacio reducido
-    sim_matrix_pca = np.exp(-euclidean_distances(reduced_data_pca, reduced_data_pca)**2 / (2 * np.var(reduced_data_pca)))
+    sim_matrix_pca = calculate_similarity_matrix(reduced_data_pca, sigma_squared=1)
     
     # Graficar la matriz de similaridad
     sns.heatmap(sim_matrix_pca, cmap='viridis', ax=ax)
@@ -207,7 +189,7 @@ for ax, d in zip(axes.flatten(), d_values):
     Z = np.dot(U[:, :d], np.diag(S[:d]))
     
     # Calcular matriz de similaridad en el espacio reducido
-    sim_matrix_svd = np.exp(-euclidean_distances(Z, Z)**2 / (2 * np.var(Z)))
+    sim_matrix_svd = calculate_similarity_matrix(Z, sigma_squared=1)
     
     # Graficar la matriz de similaridad
     sns.heatmap(sim_matrix_svd, cmap='viridis', ax=ax)
@@ -226,7 +208,7 @@ def plot_similarity_matrix(K, title):
     plt.title(title)
     plt.show()
     
-
+sigma = 1.0
 def graficar_similaridad(similarity_matrices, titles, errors, separado = False):
     errors = []
     for d in [2, 6, 10, X.shape[1]]:
@@ -234,7 +216,7 @@ def graficar_similaridad(similarity_matrices, titles, errors, separado = False):
         Z = np.dot(X, Vd)
 
         # similaridad en espacio reducido
-        K_Z = np.exp(-euclidean_distances(Z, Z)**2 / (2 * np.var(Z)))
+        K_Z = calculate_similarity_matrix(Z, sigma**2)
         if separado:
             plot_similarity_matrix(K_Z, f"Matriz de Similaridad en el Espacio Reducido (d={d})")
      
@@ -273,7 +255,7 @@ def original(X, Y, bool = True):
     if bool:
         K_X = np.exp(-euclidean_distances(X, X)**2 / (2 * np.var(X)))
     else:
-        K_X = calculate_similarity(X, sigma)
+        K_X = calculate_similarity_matrix(X, sigma)
     # regresión lineal
     model = LinearRegression().fit(X, Y)
     y_pred = model.predict(X)
@@ -318,20 +300,13 @@ def errores_prediccion(errors, dims):
 # y con     pca = PCA(n_components=d)
 #           Z_d = pca.fit_transform(X)
 
-def calculate_similarity(X, sigma):
-    pairwise_sq_dists = squareform(pdist(X, 'sqeuclidean'))
-    K = np.exp(-pairwise_sq_dists / (2 * sigma ** 2))
-    return K
-
-sigma = 1.0     # ajustar 
-
 
 # PCA y similaridades en espacios reducidos
 similarities = {}
 for d in dims:
     pca = PCA(n_components=d)
     Z_d = pca.fit_transform(X)
-    K_Z_d = calculate_similarity(Z_d, sigma)
+    K_Z_d = calculate_similarity_matrix(Z_d, sigma)
     similarities[d] = K_Z_d
 
 # Error de predicción
