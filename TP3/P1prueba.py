@@ -250,10 +250,10 @@ def plot_similarity_matrices(matrices, titles):
     plt.show()
 
 
-def original(X, Y, bool = True):
+def original(X, Y, bool = False):
     # similaridad 
     if bool:
-        K_X = np.exp(-euclidean_distances(X, X)**2 / (2 * np.var(X)))
+        K_X = calculate_similarity_matrix(np.var(X))
     else:
         K_X = calculate_similarity_matrix(X, sigma)
     # regresión lineal
