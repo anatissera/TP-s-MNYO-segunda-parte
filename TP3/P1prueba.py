@@ -80,7 +80,7 @@ normalized_dataset_martin = (dataset - dataset.min()) / (dataset.max() - dataset
 normalized_dataset = dataset - dataset.mean()
 
 # Aplicar SVD
-U, S, Vt = np.linalg.svd(normalized_dataset_martin, full_matrices=False)
+U, S, Vt = np.linalg.svd(normalized_dataset, full_matrices=False)
 V = Vt.T
 
 
@@ -141,10 +141,10 @@ proporcion_acumulada = np.cumsum(S) / np.sum(S)
 # Graficar la proporción acumulada
 plt.figure(figsize=(10, 6))
 plt.plot(range(1, len(S) + 1), proporcion_acumulada, 'o-')
-plt.axhline(y=0.5, color='r', linestyle='--')
-plt.axvline(x=np.argmax(proporcion_acumulada >= 0.5) + 1, color='r', linestyle='--')
-plt.text(np.argmax(proporcion_acumulada >= 0.5) + 1, 0.5, f'r={np.argmax(proporcion_acumulada >= 0.5) + 1}', 
-        color='purple', ha='right')
+# plt.axhline(y=0.5, color='r', linestyle='--')
+# plt.axvline(x=np.argmax(proporcion_acumulada >= 0.5) + 1, color='r', linestyle='--')
+# plt.text(np.argmax(proporcion_acumulada >= 0.5) + 1, 0.5, f'r={np.argmax(proporcion_acumulada >= 0.5) + 1}', 
+#         color='purple', ha='right')
 plt.xlabel('r')
 plt.ylabel('$\sum_{i=1}^{r} \sigma_i / \sum_{i=1}^{106} \sigma_i$')
 plt.title('Varianza según dimensión: Proporción de la suma acumulada de $\{\sigma_i\}_{i=1}^{106}$ de $A$')
@@ -296,11 +296,6 @@ def errores_prediccion(errors, dims):
 
 
 
-# otra manera con la fórmula de similaridad del enunciado (?
-# y con     pca = PCA(n_components=d)
-#           Z_d = pca.fit_transform(X)
-
-
 # PCA y similaridades en espacios reducidos
 similarities = {}
 for d in dims:
@@ -336,6 +331,7 @@ def similarity_matrix_conheatmap(K_X, similarities):
     plt.subplots_adjust(hspace=1.5, wspace=0.5)
     plt.tight_layout()
     plt.show()
+
 
 
 def main():
