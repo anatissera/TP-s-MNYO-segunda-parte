@@ -39,20 +39,35 @@ from P1_1 import load_data, normalize_dataset, pca_with_svd
 
 #     return model, y_pred
 
-def svd_least_squares(X, y):
+def svd_least_squares(X, y, d):
     # Descomposición en valores singulares (SVD)
-    U, S, VT = np.linalg.svd(X, full_matrices=False)
-
+    U, S, Vt = np.linalg.svd(X, full_matrices=False)
+    V = Vt.T
+        
+    U_d = U[:, :d]
+    S_d = np.diag(S[:d])
+    VT_d = Vt[:d, :]
+    V_d = V[:, :d]
+    
     # Calcular la pseudo-inversa de S
-    S_inv = np.diag(1 / S)
+    S_inv = np.diag(1 / S_d)
 
     # Calcular la pseudo-inversa de X
-    X_pseudo_inv = VT.T @ S_inv @ U.T
+    X_pseudo_inv = V_d @ S_inv @ U_d.T
+    
+    # PCA
+    X_pca = S_inv @ U_d.T
 
     # Calcular el vector de parámetros beta
-    beta = X_pseudo_inv @ y
+    # beta = X_pseudo_inv @ y
+    
+    beta = X_pca @ y
+    
+    error = np.linalg.norm(X @ VT_d.T @ beta - y) / np.linalg.norm(y)
 
-    return beta
+    return beta, error
+
+
 
 def pca_analysis(X, y, d_values):
     results = {}
@@ -80,69 +95,89 @@ def pca_analysis(X, y, d_values):
     return results
 
 
+def plot_prediction_errors(X, y):
+    errors = []
+    dims = range(1, X.shape[1]+1)
+
+    for d in dims:
+        beta, error = svd_least_squares(X, y, d)
+        errors.append(error)
+        print(f"Dimensión: {d}, Error de predicción: {error}")
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(dims, errors, marker='o')
+    plt.xlabel('Dimensiones')
+    plt.ylabel('Error de predicción (norma 2)')
+    plt.title('Error de predicción para diferentes dimensiones')
+    plt.grid(True)
+    plt.show()
 
 def main():
+    # X, y = load_data()
+    # X_normalized = normalize_dataset(X)
+
+    # # Definir los valores de d a considerar
+    # dims = [2, 6, 10, X.shape[1]]
+    
     X, y = load_data()
-    X_normalized = normalize_dataset(X)
+    X = normalize_dataset(X)
+    plot_prediction_errors(X, y)
 
-    # Definir los valores de d a considerar
-    dims = [2, 6, 10, X.shape[1]]
+    # # Realizar el análisis de PCA y calcular los parámetros beta
+    # results = pca_analysis(X_normalized, y, dims)
 
-    # Realizar el análisis de PCA y calcular los parámetros beta
-    results = pca_analysis(X_normalized, y, dims)
+    # # Determinar la mejor dimensión d que minimiza el error de predicción
+    # best_d = min(results, key=lambda d: results[d]['error'])
+    # best_model = results[best_d]
 
-    # Determinar la mejor dimensión d que minimiza el error de predicción
-    best_d = min(results, key=lambda d: results[d]['error'])
-    best_model = results[best_d]
+    # print(f"Mejor dimensión d: {best_d}")
+    # print(f"Error de predicción: {best_model['error']}")
+    # print(f"Vector beta: {best_model['beta']}")
+    # print(f"Varianza explicada por componente: {best_model['explained_variance_ratio']}")
 
-    print(f"Mejor dimensión d: {best_d}")
-    print(f"Error de predicción: {best_model['error']}")
-    print(f"Vector beta: {best_model['beta']}")
-    print(f"Varianza explicada por componente: {best_model['explained_variance_ratio']}")
+    # # Resolver el problema de cuadrados mínimos en el espacio original X
+    # beta_original = svd_least_squares(X_normalized, y)
+    # print(f"Vector beta en el espacio original: {beta_original}")
 
-    # Resolver el problema de cuadrados mínimos en el espacio original X
-    beta_original = svd_least_squares(X_normalized, y)
-    print(f"Vector beta en el espacio original: {beta_original}")
+    # # Graficar los errores de predicción para cada valor de d
+    # errors = [results[d]['error'] for d in dims]
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(dims, errors, marker='o')
+    # plt.title('Error de Predicción vs Dimensión d')
+    # plt.xlabel('Dimensión d')
+    # plt.ylabel('Error de Predicción')
+    # plt.grid(True)
+    # plt.show()
 
-    # Graficar los errores de predicción para cada valor de d
-    errors = [results[d]['error'] for d in dims]
-    plt.figure(figsize=(10, 6))
-    plt.plot(dims, errors, marker='o')
-    plt.title('Error de Predicción vs Dimensión d')
-    plt.xlabel('Dimensión d')
-    plt.ylabel('Error de Predicción')
-    plt.grid(True)
-    plt.show()
+    # # Graficar la varianza explicada acumulada para el mejor modelo
+    # explained_variance_ratio = np.cumsum(best_model['explained_variance_ratio'])
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(range(1, best_d + 1), explained_variance_ratio, marker='o')
+    # plt.title('Varianza Explicada Acumulada')
+    # plt.xlabel('Número de Componentes Principales')
+    # plt.ylabel('Varianza Explicada Acumulada')
+    # plt.grid(True)
+    # plt.show()
 
-    # Graficar la varianza explicada acumulada para el mejor modelo
-    explained_variance_ratio = np.cumsum(best_model['explained_variance_ratio'])
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(1, best_d + 1), explained_variance_ratio, marker='o')
-    plt.title('Varianza Explicada Acumulada')
-    plt.xlabel('Número de Componentes Principales')
-    plt.ylabel('Varianza Explicada Acumulada')
-    plt.grid(True)
-    plt.show()
+    # # Graficar los pesos del vector beta en el espacio original
+    # plt.figure(figsize=(10, 6))
+    # plt.bar(range(1, len(beta_original) + 1), beta_original)
+    # plt.title('Pesos del Vector β en el Espacio Original')
+    # plt.xlabel('Dimensiones Originales')
+    # plt.ylabel('Pesos de β')
+    # plt.grid(True)
+    # plt.show()
 
-    # Graficar los pesos del vector beta en el espacio original
-    plt.figure(figsize=(10, 6))
-    plt.bar(range(1, len(beta_original) + 1), beta_original)
-    plt.title('Pesos del Vector β en el Espacio Original')
-    plt.xlabel('Dimensiones Originales')
-    plt.ylabel('Pesos de β')
-    plt.grid(True)
-    plt.show()
-
-    # Graficar las predicciones vs las observaciones reales para el mejor modelo
-    y_pred_best = best_model['y_pred']
-    plt.figure(figsize=(10, 6))
-    plt.scatter(y, y_pred_best, c = y, cmap='viridis')
-    plt.plot([min(y), max(y)], [min(y), max(y)], color='red', linestyle='--')
-    plt.title('Predicciones vs Observaciones Reales')
-    plt.xlabel('Observaciones Reales')
-    plt.ylabel('Predicciones')
-    plt.grid(True)
-    plt.show()
+    # # Graficar las predicciones vs las observaciones reales para el mejor modelo
+    # y_pred_best = best_model['y_pred']
+    # plt.figure(figsize=(10, 6))
+    # plt.scatter(y, y_pred_best, c = y, cmap='viridis')
+    # plt.plot([min(y), max(y)], [min(y), max(y)], color='red', linestyle='--')
+    # plt.title('Predicciones vs Observaciones Reales')
+    # plt.xlabel('Observaciones Reales')
+    # plt.ylabel('Predicciones')
+    # plt.grid(True)
+    # plt.show()
 
 if __name__ == "__main__":
     main()
