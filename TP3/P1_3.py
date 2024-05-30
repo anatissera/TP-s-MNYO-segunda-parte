@@ -82,7 +82,6 @@ def pca_analysis(X, y, d_values):
 
 
 def main():
-    # Cargar y normalizar los datos
     X, y = load_data()
     X_normalized = normalize_dataset(X)
 
@@ -104,7 +103,7 @@ def main():
     # Resolver el problema de cuadrados mínimos en el espacio original X
     beta_original = svd_least_squares(X_normalized, y)
     print(f"Vector beta en el espacio original: {beta_original}")
-    
+
     # Graficar los errores de predicción para cada valor de d
     errors = [results[d]['error'] for d in dims]
     plt.figure(figsize=(10, 6))
@@ -122,6 +121,26 @@ def main():
     plt.title('Varianza Explicada Acumulada')
     plt.xlabel('Número de Componentes Principales')
     plt.ylabel('Varianza Explicada Acumulada')
+    plt.grid(True)
+    plt.show()
+
+    # Graficar los pesos del vector beta en el espacio original
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(1, len(beta_original) + 1), beta_original)
+    plt.title('Pesos del Vector β en el Espacio Original')
+    plt.xlabel('Dimensiones Originales')
+    plt.ylabel('Pesos de β')
+    plt.grid(True)
+    plt.show()
+
+    # Graficar las predicciones vs las observaciones reales para el mejor modelo
+    y_pred_best = best_model['y_pred']
+    plt.figure(figsize=(10, 6))
+    plt.scatter(y, y_pred_best, c = y, cmap='viridis')
+    plt.plot([min(y), max(y)], [min(y), max(y)], color='red', linestyle='--')
+    plt.title('Predicciones vs Observaciones Reales')
+    plt.xlabel('Observaciones Reales')
+    plt.ylabel('Predicciones')
     plt.grid(True)
     plt.show()
 
