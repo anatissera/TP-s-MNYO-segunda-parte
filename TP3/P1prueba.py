@@ -348,8 +348,8 @@ def main():
     plot_similarity_matrices(similarity_matrices, titles)
 
     #separado
-    # plot_similarity_matrix(K_X, "Matriz de Similaridad en el Espacio Original")
-    # graficar_similaridad(similarity_matrices_og, titles_og, True)
+    plot_similarity_matrix(K_X, "Matriz de Similaridad en el Espacio Original")
+    graficar_similaridad(similarity_matrices_og, titles_og, True)
     
     errores_prediccion(errors, dims)
     errores_prediccion(errors_2, dims) # ?
