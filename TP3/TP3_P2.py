@@ -62,6 +62,8 @@ X = images.reshape(n, p*p)
 # Descomposición en valores singulares
 U, S, Vt = np.linalg.svd(X)
 
+# 
+
 def plot_singular_values(S):
     # Valores singulares {𝜎𝑖}19
     # 𝑖=1 de 𝐴 en escala semilogarítmica
