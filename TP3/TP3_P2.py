@@ -35,6 +35,7 @@ plt.rcParams["font.family"] = "serif"
 # cargar las imagenes
 import os
 from PIL import Image
+from sklearn.metrics.pairwise import cosine_similarity
 
 # cargar las imagenes
 images = []
@@ -206,30 +207,28 @@ plot_minimum_dimension(X, 10)
 
 
 
-# # analizar similaridad entre los distintos valores de d
-# for d in d_values:
-#     Z = np.dot(X, Vt[:d].T)
-#     similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
-#     similarity_Z = np.exp(-np.linalg.norm(Z - Z[:, None], axis=2)**2 / (2 * 1))
+# Utilizando compresión con distintos valores de d medir la similaridad entre pares de imágenes (con
+# alguna métrica de similaridad que decida el autor) en un espacio de baja dimensión d. Analizar cómo
+# la similaridad entre pares de imágenes cambia a medida que se utilizan distintos valores de d. Cuales
+# imágenes se encuentran cerca entre si? Alguna interpretación al respecto? Ayuda: ver de utilizar una
+# matriz de similaridad para visualizar todas las similaridades par-a-par juntas.
 
-#     fig, ax = plt.subplots(1, 2)
-#     ax[0].imshow(similarity_X, cmap="viridis")
-#     ax[0].set_title("Similarity X")
-#     ax[1].imshow(similarity_Z, cmap="viridis")
-#     ax[1].set_title(f"Similarity Z d={d}")
-#     plt.show()
+# funcion para reducir la dimension y calcular la matriz de similaridad
+def similarity_matrix(U, S, d):
+    U_reduced = U[:, :d]
+    S_reduced = np.diag(S[:d])
+    Z = np.dot(U_reduced, S_reduced)
+    similarity_matrixe = cosine_similarity(Z)
+    return similarity_matrixe
 
-# # Utilizando compresión con distintos valores de d medir la similaridad entre pares de imágenes (con alguna métrica de similaridad que decida el autor) en un espacio de baja dimensión d. Analizar cómo la similaridad entre pares de imágenes cambia a medida que se utilizan distintos valores de d. Cuales imágenes se encuentran cerca entre si? Alguna interpretación al respecto? Ayuda: ver de utilizar una matriz de similaridad para visualizar todas las similaridades par-a-par juntas.
+# Visualizar la matriz de similitud para disitntos valores de d
+def plot_similarity_matrix(U, S, d_values):
+    fig, axs = plt.subplots(2, 3)
+    for d, ax in zip(d_values, axs.flatten()):
+        similarity_matrixe = similarity_matrix(U, S, d)
+        ax.imshow(similarity_matrixe, cmap="viridis")
+        ax.set_title(f"d={d}")
+    plt.show()
 
-# # medir la similaridad entre un par de muestras xi, xj
-# def similarity(xi, xj, sigma=1):
-#     return np.exp(-np.linalg.norm(xi - xj)**2 / (2 * sigma**2))
-
-# # Similaridad entre todas las muestras
-# similarity_X = np.exp(-np.linalg.norm(X - X[:, None], axis=2)**2 / (2 * 1))
-
-# # mostrar la matriz de similaridad
-# fig, ax = plt.subplots()
-# ax.imshow(similarity_X, cmap="viridis")
-# ax.set_title("Similarity X")
-# plt.show()
+d_values = [2, 6, 10, 14, 16, 50]
+plot_similarity_matrix(U, S, d_values)
