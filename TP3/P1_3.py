@@ -1,0 +1,129 @@
+# Los datos X vienen acompañados de una variable dependiente respuesta o etiquetas llamada Y (archivo
+# y.txt) estructurada como un vector n × 1 para cada muestra. Queremos encontrar el vector β y modelar
+# linealmente el problema que minimice la norma
+# ∥Xβ − y∥_2
+# de manera tal de poder predecir con Xβ = y lo mejor posible a las etiquetas y, es decir, minimizar el
+# error de predicción. Usando PCA, que dimensión d mejora la predicción? Cuales muestras son las de
+# mejor predicción con el mejor modelo? Resolviendo el problema de cuadrados mínimos en el espacio
+# original X, que peso se le asigna a cada dimensión original si observamos el vector β?
+
+
+# Para resolver el problema de cuadrados mínimos Xβ= y utilizando SVD, primero se calcula la descomposición en valores singulares de X. 
+# Una vez obtenida la descomposición, la pseudo-inversa de X, denotada como X^+, se utiliza para encontrar la solución de cuadrados mínimos. \\
+# Esta se define como X^+ = V S^+ U^t donde S^+ es la pseudo-inversa de S. \\
+# Si S es una matriz diagonal con elementos s_i en su diagonal, entonces S^+ es una matriz diagonal con elementos 
+# 1/ s_i si s_i != 0, y 0 en caso contrario.
+
+# La solución se obtiene entonces como β = X^+ y = V S^+ U^T y. \\
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+from P1_1 import load_data, normalize_dataset, pca_with_svd
+
+
+# def perform_pca(X_dataset, Y, dims):
+#     pca = PCA(n_components=X_dataset.shape[1])
+#     pca.fit(X_dataset)
+#     V = pca.components_.T
+    
+#     for d in dims:
+#         Vd = V[:, :d]
+#         Z = np.dot(X_dataset, Vd)
+#         model = LinearRegression().fit(Z, Y)
+#         y_pred = model.predict(Z)
+
+#     return model, y_pred
+
+def svd_least_squares(X, y):
+    # Descomposición en valores singulares (SVD)
+    U, S, VT = np.linalg.svd(X, full_matrices=False)
+
+    # Calcular la pseudo-inversa de S
+    S_inv = np.diag(1 / S)
+
+    # Calcular la pseudo-inversa de X
+    X_pseudo_inv = VT.T @ S_inv @ U.T
+
+    # Calcular el vector de parámetros beta
+    beta = X_pseudo_inv @ y
+
+    return beta
+
+def pca_analysis(X, y, d_values):
+    results = {}
+    for d in d_values:
+        # Aplicar PCA para reducir la dimensionalidad a d componentes
+        pca = PCA(n_components=d)
+        X_reduced = pca.fit_transform(X)
+
+        # Calcular los parámetros beta usando SVD en el espacio reducido
+        beta = svd_least_squares(X_reduced, y)
+
+        # Calcular las predicciones
+        y_pred = X_reduced @ beta
+
+        # Calcular el error de predicción
+        error = np.linalg.norm(y - y_pred)
+
+        results[d] = {
+            "beta": beta,
+            "error": error,
+            "y_pred": y_pred,
+            "explained_variance_ratio": pca.explained_variance_ratio_
+        }
+
+    return results
+
+
+
+def main():
+    # Cargar y normalizar los datos
+    X, y = load_data()
+    X_normalized = normalize_dataset(X)
+
+    # Definir los valores de d a considerar
+    dims = [2, 6, 10, X.shape[1]]
+
+    # Realizar el análisis de PCA y calcular los parámetros beta
+    results = pca_analysis(X_normalized, y, dims)
+
+    # Determinar la mejor dimensión d que minimiza el error de predicción
+    best_d = min(results, key=lambda d: results[d]['error'])
+    best_model = results[best_d]
+
+    print(f"Mejor dimensión d: {best_d}")
+    print(f"Error de predicción: {best_model['error']}")
+    print(f"Vector beta: {best_model['beta']}")
+    print(f"Varianza explicada por componente: {best_model['explained_variance_ratio']}")
+
+    # Resolver el problema de cuadrados mínimos en el espacio original X
+    beta_original = svd_least_squares(X_normalized, y)
+    print(f"Vector beta en el espacio original: {beta_original}")
+    
+    # Graficar los errores de predicción para cada valor de d
+    errors = [results[d]['error'] for d in dims]
+    plt.figure(figsize=(10, 6))
+    plt.plot(dims, errors, marker='o')
+    plt.title('Error de Predicción vs Dimensión d')
+    plt.xlabel('Dimensión d')
+    plt.ylabel('Error de Predicción')
+    plt.grid(True)
+    plt.show()
+
+    # Graficar la varianza explicada acumulada para el mejor modelo
+    explained_variance_ratio = np.cumsum(best_model['explained_variance_ratio'])
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, best_d + 1), explained_variance_ratio, marker='o')
+    plt.title('Varianza Explicada Acumulada')
+    plt.xlabel('Número de Componentes Principales')
+    plt.ylabel('Varianza Explicada Acumulada')
+    plt.grid(True)
+    plt.show()
+
+if __name__ == "__main__":
+    main()
