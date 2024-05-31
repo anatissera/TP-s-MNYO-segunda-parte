@@ -111,6 +111,45 @@ def plot_prediction_errors(X, y):
     plt.title('Error de predicción para diferentes dimensiones')
     plt.grid(True)
     plt.show()
+    
+def leastSquares(matrix, y):
+    # Realizamos la descomposición SVD
+    u, s, v = np.linalg.svd(matrix, full_matrices=False)
+    errors = []
+    dimensions = []
+
+    for d in range(1, matrix.shape[1] + 1):
+        # Realizamos la reducción de dimensiones
+        U_reduced = u[:, :d]
+        S_reduced = np.diag(s[:d])
+        V_reduced = v[:d, :]
+        matrix_svd = U_reduced @ S_reduced @ V_reduced
+        
+        # Calculamos la matriz de coeficientes
+        A = np.linalg.inv(S_reduced) @ U_reduced.T
+        # A = np.linalg.pinv(U_reduced @ S_reduced)
+        
+        # Calculamos los coeficientes
+        beta = A @ y
+        
+        # Calculamos el error
+        error = np.linalg.norm(matrix @ V_reduced.T @ beta - y) / np.linalg.norm(y)
+
+        errors.append(error)
+        dimensions.append(d)
+    
+    best_dimension = dimensions[np.argmin(errors)]    
+            
+    plt.figure()
+    plt.plot(dimensions, errors)
+    plt.title("Error relativo entre normas en función de la dimensión")
+    plt.xlabel("Dimensión")
+    plt.ylabel("% de Error")
+    # plt.ylim(0.75, 0.80)
+    plt.show()
+    
+    print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
+    
 
 def main():
     # X, y = load_data()
@@ -121,6 +160,7 @@ def main():
     
     X, y = load_data()
     X = normalize_dataset(X)
+    leastSquares(X, y)
     plot_prediction_errors(X, y)
 
     # # Realizar el análisis de PCA y calcular los parámetros beta

@@ -66,6 +66,7 @@ def pca_with_svd(X, d):
     # Componentes principales
     Z = np.dot(U_d, S_d)
     
+    
     return Z, U_d, S_d, VT_d
 
 def similarity_matrix(X, deviation):
@@ -156,7 +157,7 @@ def perform_pca(X_dataset, Y, errors, titles, similarity_matrices, dims, sigma=1
     for d in dims:
         Vd = V[:, :d]
         Z = np.dot(X_dataset, Vd)
-        K_Z = calculate_similarity_matrix(Z, sigma**2)
+        K_Z = similarity_matrix(Z, sigma**2)
         similarity_matrices.append(K_Z)
         titles.append(f"Matriz de Similaridad en el Espacio Reducido (d={d}) con PCA")
         
@@ -174,7 +175,7 @@ def perform_svd(X_dataset, Y, errors, titles, similarity_matrices, dims, sigma=1
     for d in dims:
         Vd = V[:, :d]
         Z = np.dot(X_dataset, Vd)
-        K_Z = calculate_similarity_matrix(Z, sigma**2)
+        K_Z = similarity_matrix(Z, sigma**2)
         similarity_matrices.append(K_Z)
         titles.append(f"Matriz de Similaridad en el Espacio Reducido (d={d}) con SVD")
         
@@ -188,9 +189,9 @@ def perform_svd(X_dataset, Y, errors, titles, similarity_matrices, dims, sigma=1
 def original(X, Y, sigma=1, bool=False):
     # similaridad 
     if bool:
-        K_X = calculate_similarity_matrix(np.var(X))
+        K_X = similarity_matrix(np.var(X))
     else:
-        K_X = calculate_similarity_matrix(X, sigma)
+        K_X = similarity_matrix(X, sigma)
     # regresión lineal
     model = LinearRegression().fit(X, Y)
     y_pred = model.predict(X)
