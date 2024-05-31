@@ -48,6 +48,11 @@ def plot_singular_values(X, indices=[3, 7, 11]):
 def valores_singulares_acumulada(dataset):
     U, S, Vt = np.linalg.svd(dataset, full_matrices=False)
     
+    print (f"valor singular para d = 102 {S[101]:.4f}")
+    print (f"valor singular para d = 103 {S[102]:.4f}")
+    print (f"valor singular para d = 104 {S[103]:.4f}")
+    print (f"valor singular para d = 105 {S[104]:.4f}")
+    print (f"valor singular para d = 106 {S[105]:.4f}")
     S_squared = S**2
     proporcion_acumulada = np.cumsum(S_squared) / np.sum(S_squared)
 
