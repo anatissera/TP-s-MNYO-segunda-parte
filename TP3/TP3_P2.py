@@ -36,6 +36,7 @@ plt.rcParams["font.family"] = "serif"
 import os
 from PIL import Image
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_similarity
 
 # cargar las imagenes
 images = []
@@ -61,6 +62,8 @@ X = images.reshape(n, p*p)
 # Aprender una representación basada en Descomposición de Valores Singulares utilizando las n imágenes.
 # Descomposición en valores singulares
 U, S, Vt = np.linalg.svd(X)
+
+# 
 
 # 
 
