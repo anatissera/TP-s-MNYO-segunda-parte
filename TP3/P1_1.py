@@ -49,10 +49,10 @@ def load_data():
 
 
 def normalize_dataset(dataset):
-    return (dataset - dataset.mean())
+    return (dataset - np.mean(dataset, axis=0))
 
 def normalize_dataset_martin(dataset):
-    return (dataset - dataset.min()) / (dataset.max() - dataset.min())
+    return (dataset - np.min(dataset)) / (np.max(dataset) - np.min(dataset))
 
 def compute_covariance_matrix(dataset):
     covariance_matrix = np.cov(dataset, rowvar=False)
