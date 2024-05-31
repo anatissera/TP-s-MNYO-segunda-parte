@@ -71,14 +71,17 @@ def plot_singular_values(S):
     # de forma decreciente y que el primer valor singular 𝜎1 duplica
     # al siguiente valor singular 𝜎2, frente a un menor decrecimiento
     # valor a valor para 𝑖 subsiguientes.
-    plt.figure(figsize=(12, 5))
-    plt.subplot(1, 2, 1)
-    # cambiar la fuente a serif
-    plt.plot(S, marker="o")
-    plt.yscale("log")
-    plt.ylabel("Valor singular 𝜎i")
-    plt.xlabel("i")
 
+    fig, ax= plt.subplots()
+    ax.plot(S, marker="o",color="slateblue")
+    ax.set_yscale("log")
+    ax.set_title("Valores singulares $\\sigma_i$", fontsize=12)
+    ax.set_xlabel("i", fontsize=12)
+    ax.set_ylabel("Valor singular $sigma_i$", fontsize=12)
+    ax.yaxis.set_major_formatter(plt.ScalarFormatter())
+    ax.yaxis.set_minor_formatter(plt.ScalarFormatter())
+    ax.tick_params(axis='y', which='both', labelsize=10)
+    plt.show()
     #Proporción de la suma acumulada de {𝜎𝑖}19
     # 𝑖=1 de 𝐴
     # respecto de la desviación 𝜎 total (ver 12). Se representa el
@@ -92,12 +95,11 @@ def plot_singular_values(S):
     cumsum /= cumsum[-1]
 
 
-    plt.subplot(1, 2, 2)
-    plt.plot(cumsum, marker="o", color="slateblue")
-    plt.title("Proporción de la suma acumulada")
+    fig, axs = plt.subplots()
 
+    axs.plot(cumsum, marker="o", color="slateblue")
+    axs.set_title("Proporción de la suma acumulada")
     plt.show()
-
     # mostrar los valores singulares
 # def plot_singular_values(S):
 #     # Valores singulares {𝜎𝑖}19
@@ -138,8 +140,46 @@ def plot_images_reconstructed(X, Vt, d_values):
         ax.set_title(f"d={d} error={error:.2f}%")
     plt.show()
 
-d_values = [2, 6, 10, 14, 16, 50]
+def plot_images_reconstructed_last_values(X, Vt, d_values):
+    fig, axs = plt.subplots(2, 3)
+    for d, ax in zip(d_values, axs.flatten()):
+        Z = np.dot(X, Vt[d:].T)
+        X_reconstructed = np.dot(Z, Vt[d:])
+        images_reconstructed = X_reconstructed.reshape(n, p, p)
+        ax.imshow(images_reconstructed[0], cmap="gray")
+        # mostrar el porcentaje de error en cada imagen
+        error = error_approximation(X[0], X_reconstructed[0])
+        ax.set_title(f"d={d} error={error:.2f}%")
+    plt.show()
+
+d_values = [2, 6, 10, 14, 16, 19]
 plot_images_reconstructed(X, Vt, d_values)
+
+plot_images_reconstructed_last_values(X, Vt, d_values)
+
+def compare_last_values_vs_first(X, Vt):
+    # comparar errores entre usar las primeras 10 componentes y las últimas 9
+    errors_first = []
+    errors_last = []
+    d = 10
+    for i in range(n):
+        Z = np.dot(X[i], Vt[:d].T)
+        X_reconstructed = np.dot(Z, Vt[:d])
+        errors_first.append(error_approximation(X[i], X_reconstructed))
+
+        Z = np.dot(X[i], Vt[d:].T)
+        X_reconstructed = np.dot(Z, Vt[d:])
+        errors_last.append(error_approximation(X[i], X_reconstructed))
+
+    fig, ax = plt.subplots()
+    ax.bar(np.arange(n), errors_last, label="Últimas 9 componentes", color="slateblue")
+    ax.bar(np.arange(n), errors_first, label="Primeras 10 componentes", color="salmon")
+    ax.set_title("Error de aproximación")
+    ax.legend()
+    plt.show()
+
+compare_last_values_vs_first(X, Vt)
+
 
 # Graficar porcentaje de error de aproximacion para cada una de las imagenes a las que se les aplico SVD truncado con d = 6
 def plot_error_approximation(X, Vt, d1, d2):
