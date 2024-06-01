@@ -79,7 +79,14 @@ def plot_3d(X, y, beta):
     # Create a grid to plot the plane
     x_surf, y_surf = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 100), 
                                  np.linspace(X[:, 1].min(), X[:, 1].max(), 100))
-    z_surf = beta[0] * x_surf + beta[1] * y_surf + beta[2]
+    
+    # We assume beta contains the coefficients and the intercept
+    if len(beta) == 3:
+        z_surf = beta[0] * x_surf + beta[1] * y_surf + beta[2]
+    elif len(beta) == 2:  # In case there is no intercept in beta
+        z_surf = beta[0] * x_surf + beta[1] * y_surf
+    else:
+        raise ValueError("Unexpected number of beta coefficients")
     
     # Plot the plane
     ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.5, cmap='viridis', edgecolor='none')
@@ -97,14 +104,16 @@ def main():
     
     best_dimension = plot_prediction_errors(X, labels)
     
-    X_pca, U_d, S_d, Vt_d = generate_pca(X, best_dimension)
-    X_pseudo_inv, beta, error = svd_least_squares_PCA(X, labels, best_dimension)
+    # Perform PCA with the top 3 dimensions for 3D plotting
+    X_pca, U_d, S_d, Vt_d = generate_pca(X, 3)
+    X_pseudo_inv, beta, error = svd_least_squares_PCA(X_pca, labels, 3)
     
     plot_beta_weights(beta)
     
-    
-    beta = np.append(beta, 0)  # Assuming no intercept in the original regression
+    # Ensure beta is compatible with 3D plotting
+    if len(beta) == 2:
+        beta = np.append(beta, 0)
     plot_3d(X_pca, labels, beta)
-
+    
 if __name__ == "__main__":
     main()
