@@ -14,56 +14,73 @@
 # Si S es una matriz diagonal con elementos s_i en su diagonal, entonces S^+ es una matriz diagonal con elementos 
 # 1/ s_i si s_i != 0, y 0 en caso contrario.
 
-# La solución se obtiene entonces como β = X^+ y = V S^+ U^T y. \\
-
-from P1_1 import load_data, normalize_dataset, pca_with_svd
+# La solución se obtiene entonces como β = X^+ y = V S^+ U^T y. \\                               def load_data():
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+
+
+from P1_1 import load_data, normalize_dataset, pca_with_svd
 
 def pseudo_inverse(S_d):
     S_d_inv = np.copy(S_d)
-    for i in range(len(S_d)):
+    
+    for i in range(len(S_d - 4)):
         if S_d[i, i] != 0:
             S_d_inv[i, i] = 1 / S_d[i, i]
         else:
             S_d_inv[i, i] = 0
+            
+    for i in range (len(S_d - 4), len(S_d)):
+        S_d_inv[i, i] = 0
+    
     return S_d_inv
 
-def svd_least_squares_PCA(X, y, d):
+def generate_pca(X, d):
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
     V = Vt.T
+    
     U_d = U[:, :d]
     S_d = np.diag(S[:d])
     Vt_d = Vt[:d, :]
     V_d = V[:, :d]
-    X_pca = pseudo_inverse(S_d) @ U_d.T
-    beta = X_pca @ y
-    error = np.linalg.norm(X @ Vt_d.T @ beta - y)
-    return beta, error
+    
+    X_pca = U_d @ S_d
+    
+    return X_pca
 
-def svd_least_squares(X, y, d):
+def svd_least_squares_PCA(X, y, d):
+   
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
+    V = Vt.T
+    
     U_d = U[:, :d]
     S_d = np.diag(S[:d])
     Vt_d = Vt[:d, :]
-    X_pca_pseudo_inv = Vt_d.T @ pseudo_inverse(S_d) @ U_d.T
-    beta = X_pca_pseudo_inv @ y
-    error = np.linalg.norm(X @ beta - y) / np.linalg.norm(y)
-    return beta, error
+    V_d = V[:, :d]
+    
+    X_pseudo_inv = Vt_d.T @ pseudo_inverse(S_d) @ U_d.T
+    
+    beta = X_pseudo_inv @ y
+    
+    # error norma 2 al cuadrado
+    error = np.linalg.norm(X @ beta - y) **2
+    
+    return X_pseudo_inv, beta, error
 
-def plot_prediction_errors(X, y, use_PCA=True):
+
+def plot_prediction_errors(X, y, bool=False):
     errors = []
     dims = range(1, X.shape[1] + 1)
+    
     for d in dims:
-        if use_PCA:
-            _, error = svd_least_squares_PCA(X, y, d)
-        else:
-            _, error = svd_least_squares(X, y, d)
+        A_d = generate_pca(X, d)
+        _, _, error = svd_least_squares_PCA(A_d, y, d)
         errors.append(error)
-    best_dimension = dims[np.argmin(errors)]
+       
+    best_dimension = dims[np.argmin(errors)]   
+    
     plt.figure(figsize=(12, 6))
     plt.plot(dims, errors, 'o-', markersize=2.5, color="darkcyan", linewidth=2)
     plt.xlabel('Dimensiones')
@@ -71,43 +88,38 @@ def plot_prediction_errors(X, y, use_PCA=True):
     plt.title('Error de predicción para diferentes dimensiones')
     plt.grid(True)
     plt.show()
+    
     print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
+    
     return best_dimension
 
-def plot_singular_values(X):
-    _, S, _ = np.linalg.svd(X, full_matrices=False)
+def plot_beta_weights(beta):
     plt.figure(figsize=(12, 6))
-    plt.plot(range(1, len(S) + 1), S, 'o-', markersize=4, color="purple", linewidth=2)
-    plt.xlabel('Dimensiones')
-    plt.ylabel('Valor singular')
-    plt.title('Valores singulares de las dimensiones')
+    plt.bar(range(1, len(beta) + 1), beta)
+    plt.title('Pesos del Vector β en el Espacio Original')
+    plt.xlabel('Dimensiones Originales')
+    plt.ylabel('Pesos de β')
     plt.grid(True)
     plt.show()
 
 def main():
     X, y = load_data()
     X = normalize_dataset(X)
+    y = normalize_dataset(y)
     
-    # Separar los datos en conjunto de entrenamiento y prueba
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    best_dimension = plot_prediction_errors(X_train, y_train, use_PCA=True)
-
-    beta, _ = svd_least_squares(X_train, y_train, best_dimension)
+    plot_prediction_errors(X, y)
     
-    test_error = np.linalg.norm(X_test @ beta - y_test) / np.linalg.norm(y_test)
-    print(f"Error en el conjunto de prueba: {test_error}")
+    X_pseudo_inv, beta, error = svd_least_squares_PCA(X, y, 2)
+    plot_beta_weights(beta)
     
-    # plot_singular_values(beta)
+    X_pseudo_inv, beta, error = svd_least_squares_PCA(X, y, 3)
+    plot_beta_weights(beta)
     
-    # pesos asignados a cada dimensión original
-    plt.figure(figsize=(12, 6))
-    plt.bar(range(1, len(beta) + 1), beta, color='lightblue')
-    plt.xlabel('Dimensiones originales')
-    plt.ylabel('Pesos del vector beta')
-    plt.title('Pesos asignados a cada dimensión original en el vector beta')
-    plt.grid(True)
-    plt.show()
-
-if __name__ == '__main__':
+    X_pseudo_inv, beta, error = svd_least_squares_PCA(X, y, 103)
+    plot_beta_weights(beta)
+    
+    return
+    
+if __name__ == "__main__":
     main()
