@@ -32,9 +32,6 @@ def pseudo_inverse(S_d):
         else:
             S_d_inv[i, i] = 0
             
-    for i in range (len(S_d - 4), len(S_d)):
-        S_d_inv[i, i] = 0
-    
     return S_d_inv
 
 def generate_pca(X, d):

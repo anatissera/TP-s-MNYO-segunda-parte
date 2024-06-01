@@ -34,10 +34,9 @@ def generate_pca(X, d):
 def svd_least_squares_PCA(X, y, d):
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
     V = Vt.T
-    U_d = U[:, :d]
-    S_d = np.diag(S[:d])
-    Vt_d = Vt[:d, :]
-    X_pseudo_inv = Vt_d.T @ pseudo_inverse(S_d) @ U_d.T
+    S = np.diag(S)
+    
+    X_pseudo_inv = Vt.T @ pseudo_inverse(S) @ U.T
     beta = X_pseudo_inv @ y
     error = np.linalg.norm(X @ beta - y) ** 2
     return X_pseudo_inv, beta, error
@@ -55,7 +54,7 @@ def plot_prediction_errors(X, y):
     plt.xlabel('Dimensiones')
     plt.ylabel('Error de predicción (norma 2)')
     plt.title('Error de predicción para diferentes dimensiones')
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
     print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
     return best_dimension
@@ -66,29 +65,25 @@ def plot_beta_weights(beta):
     plt.title('Pesos del Vector β en el Espacio Original')
     plt.xlabel('Dimensiones Originales')
     plt.ylabel('Pesos de β')
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
 
 def plot_3d(X, y, beta):
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     
-    # Scatter plot of the original data points
     ax.scatter(X[:, 0], X[:, 1], y, c=y, cmap='viridis', marker='o')
     
-    # Create a grid to plot the plane
     x_surf, y_surf = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 100), 
                                  np.linspace(X[:, 1].min(), X[:, 1].max(), 100))
-    
-    # We assume beta contains the coefficients and the intercept
+
     if len(beta) == 3:
         z_surf = beta[0] * x_surf + beta[1] * y_surf + beta[2]
-    elif len(beta) == 2:  # In case there is no intercept in beta
+    elif len(beta) == 2: 
         z_surf = beta[0] * x_surf + beta[1] * y_surf
     else:
-        raise ValueError("Unexpected number of beta coefficients")
+        raise ValueError()
     
-    # Plot the plane
     ax.plot_surface(x_surf, y_surf, z_surf, alpha=0.5, cmap='viridis', edgecolor='none')
     
     ax.set_xlabel('X1')
@@ -96,6 +91,19 @@ def plot_3d(X, y, beta):
     ax.set_zlabel('y')
     plt.title('Predicción 3D vs Real con PCA')
     plt.show()
+    
+
+def plot_predictions_vs_observations_2D(y, y_pred):
+    plt.figure(figsize=(12, 6))
+    plt.scatter(y, y_pred, c= y, cmap='viridis', label='Predicciones')
+    plt.plot([min(y), max(y)], [min(y), max(y)], color='red', linestyle='--', label='Observaciones')
+    plt.title('Predicciones vs Observaciones Reales')
+    plt.xlabel('Observaciones Reales')
+    plt.ylabel('Predicciones')
+    plt.legend()
+    plt.grid(False)
+    plt.show()
+    
 
 def main():
     x, y = load_data()
@@ -103,8 +111,7 @@ def main():
     labels = normalize_dataset(y)
     
     best_dimension = plot_prediction_errors(X, labels)
-    
-    # Perform PCA with the top 3 dimensions for 3D plotting
+   
     X_pca, U_d, S_d, Vt_d = generate_pca(X, 3)
     X_pseudo_inv, beta, error = svd_least_squares_PCA(X_pca, labels, 3)
     

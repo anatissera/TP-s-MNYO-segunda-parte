@@ -123,14 +123,14 @@ def plot_prediction_errors(X, y, bool=False):
 #     plt.grid(True)
 #     plt.show()
 
-# def plot_beta_weights(beta):
-#     plt.figure(figsize=(12, 6))
-#     plt.bar(range(1, len(beta) + 1), beta)
-#     plt.title('Pesos del Vector β en el Espacio Original')
-#     plt.xlabel('Dimensiones Originales')
-#     plt.ylabel('Pesos de β')
-#     plt.grid(True)
-#     plt.show()
+def plot_beta_weights(beta):
+    plt.figure(figsize=(12, 6))
+    plt.bar(range(1, len(beta) + 1), beta)
+    plt.title('Pesos del Vector β en el Espacio Original')
+    plt.xlabel('Dimensiones Originales')
+    plt.ylabel('Pesos de β')
+    plt.grid(False)
+    plt.show()
 
 def plot_predictions_vs_observations(y, y_pred):
     plt.figure(figsize=(12, 6))
@@ -140,13 +140,14 @@ def plot_predictions_vs_observations(y, y_pred):
     plt.xlabel('Observaciones Reales')
     plt.ylabel('Predicciones')
     plt.legend()
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
     
     
 def main():
     X, y = load_data()
     X = normalize_dataset(X)
+    y = normalize_dataset(y)
     
     # plot_prediction_errors(X, y, True)  # este es el que no es con PCA
     
