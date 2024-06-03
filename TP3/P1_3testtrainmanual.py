@@ -40,22 +40,44 @@ def svd_least_squares_PCA(X, y, d):
     error = np.linalg.norm(X @ beta - y) ** 2
     return X_pseudo_inv, beta, error, S
 
-def plot_prediction_errors(X, y):
-    errors = []
-    dims = range(1, X.shape[1] + 1)
+def shuffle_split(X, y, test_size=0.2, random_state=None):
+    if random_state is not None:
+        np.random.seed(random_state)
+    indices = np.arange(X.shape[0])
+    np.random.shuffle(indices)
+    
+    test_set_size = int(X.shape[0] * test_size)
+    test_indices = indices[:test_set_size]
+    train_indices = indices[test_set_size:]
+    
+    X_train, X_test = X[train_indices], X[test_indices]
+    y_train, y_test = y[train_indices], y[test_indices]
+    
+    return X_train, X_test, y_train, y_test
+
+def plot_prediction_errors_train_test(X_train, y_train, X_test, y_test):
+    test_errors = []
+    dims = range(1, X_train.shape[1] + 1)
+    
     for d in dims:
-        A_d, _ = generate_pca(X, d)
-        _, _, error, _ = svd_least_squares_PCA(A_d, y, d)
-        errors.append(error)
-    best_dimension = dims[np.argmin(errors)]
+        X_train_pca, Vt_d = generate_pca(X_train, d)
+        _, beta, train_error, _ = svd_least_squares_PCA(X_train_pca, y_train, d)
+        
+        X_test_pca = X_test @ Vt_d.T
+        test_error = np.linalg.norm(X_test_pca @ beta - y_test) ** 2
+        test_errors.append(test_error)
+        
     plt.figure(figsize=(12, 6))
-    plt.plot(dims, errors, 'o-', markersize=2.5, color="darkcyan", linewidth=2)
+    plt.plot(dims, test_errors, 'o-', markersize=2.5, color="darkcyan", linewidth=2, label='Error evaluado en Prueba $\\neq$ Entrenamiento')
     plt.xlabel('Dimensiones', fontsize=14)
     plt.ylabel('Error de predicción cuadrático (norma 2)', fontsize=14)
-    plt.title('Error de predicción cuadrático para diferentes dimensiones', fontsize=15)
+    plt.title('Error de predicción cuadrático con norma 2 para diferentes dimensiones con entrenamiento y prueba', fontsize=15)
+    plt.legend(fontsize= 12)
     plt.grid(False)
     plt.show()
-    print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
+    
+    best_dimension = dims[np.argmin(test_errors)]
+    print(f"La mejor dimensión es {best_dimension} con un error de prueba de {test_errors[best_dimension-1]}")
     return best_dimension
 
 def plot_beta_weights(beta):
@@ -93,7 +115,7 @@ def plot_3d(X, y, beta):
 
 def plot_predictions_vs_observations_2D(y, y_pred):
     plt.figure(figsize=(12, 6))
-    plt.scatter(y, y_pred, c= y, cmap='viridis', label='Predicciones')
+    plt.scatter(y, y_pred, c=y, cmap='viridis', label='Predicciones')
     plt.plot([min(y), max(y)], [min(y), max(y)], color='red', linestyle='--', label='Observaciones')
     plt.title('Predicciones vs Observaciones Reales')
     plt.xlabel('Observaciones Reales')
@@ -117,28 +139,34 @@ def main():
     X = normalize_dataset(x)
     labels = normalize_dataset(y)
     
-    best_dimension = plot_prediction_errors(X, labels)
+    # Dividir en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = shuffle_split(X, labels, test_size=0.2, random_state=42)
+    
+    best_dimension = plot_prediction_errors_train_test(X_train, y_train, X_test, y_test)
    
-    X_pca_3, _ = generate_pca(X, 3)
-    X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, labels, 3)
+    X_pca_3, _ = generate_pca(X_train, 3)
+    X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, y_train, 3)
     
     plot_beta_weights(beta_3)
     plot_singular_values(S_3)
     
-    plot_3d(X_pca_3, labels, beta_3)
+    plot_3d(X_pca_3, y_train, beta_3)
     
+    # Evaluar el modelo en el conjunto de prueba
+    X_test_pca_3 = X_test @ _[:3, :].T
+    y_test_pred_3 = X_test_pca_3 @ beta_3
+    plot_predictions_vs_observations_2D(y_test, y_test_pred_3)
     
-    X_pca_2, Vt_d_2 = generate_pca(X, 2)
-    X_pseudo_inv_2, beta_2, error_2, S_2 = svd_least_squares_PCA(X_pca_2, labels, 2)
+    X_pca_2, Vt_d_2 = generate_pca(X_train, 2)
+    X_pseudo_inv_2, beta_2, error_2, S_2 = svd_least_squares_PCA(X_pca_2, y_train, 2)
     
     plot_beta_weights(beta_2)
     
-    # proyecto X a 2d
+    # Proyecto X a 2d
     X_proj = X @ Vt_d_2.T
     y_pred_2D = X_proj @ beta_2
     
     plot_predictions_vs_observations_2D(labels, y_pred_2D)    
-    
 
 if __name__ == "__main__":
     main()

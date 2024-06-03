@@ -42,17 +42,12 @@ def plot_singular_values(X, indices=[3, 7, 11]):
     plt.ylabel('Valores singulares $\sigma_i$', fontsize=17)
     plt.title('Figura de los valores singulares del dataset $X \{\sigma_i\}_{i=1}^{102}$', fontsize=18)
     plt.legend(fontsize = 14)
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
 
 def valores_singulares_acumulada(dataset):
     U, S, Vt = np.linalg.svd(dataset, full_matrices=False)
     
-    print (f"valor singular para d = 102 {S[101]:.4f}")
-    print (f"valor singular para d = 103 {S[102]:.4f}")
-    print (f"valor singular para d = 104 {S[103]:.4f}")
-    print (f"valor singular para d = 105 {S[104]:.4f}")
-    print (f"valor singular para d = 106 {S[105]:.4f}")
     S_squared = S**2
     proporcion_acumulada = np.cumsum(S_squared) / np.sum(S_squared)
 
@@ -76,7 +71,7 @@ def valores_singulares_acumulada(dataset):
     plt.ylabel(r'$\dfrac{\sum_{i=1}^{d} \sigma_i ^2}{\sum_{i=1}^{n} \sigma_i ^2}$', rotation=0, fontsize=17, labelpad=30, y=0.375)
     plt.title('Varianza según dimensión: Proporción de la suma acumulada de $\{\sigma_i\}$ de $A$', fontsize=18)
     plt.legend(fontsize=14)
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
     
 
@@ -116,7 +111,7 @@ def media_acumulada_valores_singulares(dataset):
     plt.xlabel('$i$', fontsize=17)
     plt.ylabel('Media Acumulada de las Diferencias de los Valores Singulares', fontsize=17)
     plt.title('Media Acumulada de las Diferencias de los Valores Singulares de $A$', fontsize=18)
-    plt.grid(True)
+    plt.grid(False)
     plt.show()
     
     
