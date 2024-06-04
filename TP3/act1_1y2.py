@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-labels = np.loadtxt('tp3/y.txt')
-
-path = "TP3/dataset02.csv"
+labels = np.loadtxt('tp3/data/y.txt')
+labels = labels - np.mean(labels)
+path = 'tp3/data/dataset/dataset.csv'
 
 def processMatrix(matrix):
     matrix = pd.read_csv(path, header=None)
@@ -18,15 +17,6 @@ def processMatrix(matrix):
     matrix = matrix - np.mean(matrix, axis=0) # esta cosa centra la matriz
 
     return matrix
-
-# def similarity_matrix(matrix, deviation):
-#     n = matrix.shape[0]
-#     sim_matrix = np.zeros((n, n))
-#     for i in range(n):
-#         if i%50 == 0: print(f"cambie de columna, estoy en {i}")
-#         for j in range(n):
-#             sim_matrix[i, j] = np.exp(-(np.linalg.norm(matrix[i] - matrix[j]))/2*deviation**2)
-#     return sim_matrix
 
 def euclidean_distances(X):
     # Calculamos la matriz de productos internos
@@ -56,10 +46,10 @@ def show_similarity_matrix(matrix, deviation):
     plt.show()
     
 def reduceDimensions(matrix, deviation, dimension):
-    u, s, v = np.linalg.svd(matrix, full_matrices=False)
+    u, s, vt = np.linalg.svd(matrix, full_matrices=False)
     print(f"Dimensiones de U: {u.shape}")
     print(f"Dimensiones de S: {s.shape}")
-    print(f"Dimensiones de V: {v.shape}")
+    print(f"Dimensiones de Vt: {vt.shape}")
     print()    
 
     # Reducimos la dimensión de la matriz
@@ -93,7 +83,7 @@ def reduceDimensions(matrix, deviation, dimension):
         plt.show()
         
         plt.figure()
-        plt.imshow(v)
+        plt.imshow(vt)
         plt.colorbar()
         plt.title("Matriz V")
         plt.show()
@@ -125,44 +115,6 @@ def iterateDeviation(matrix):
         print(f"Desviación: {deviation}")
         show_similarity_matrix(matrix, deviation)
         deviation = deviation/10
-
-def leastSquares(matrix, y):
-    # Realizamos la descomposición SVD
-    u, s, v = np.linalg.svd(matrix, full_matrices=False)
-    errors = []
-    dimensions = []
-
-    for d in range(1, matrix.shape[1] + 1):
-        # Realizamos la reducción de dimensiones
-        U_reduced = u[:, :d]
-        S_reduced = np.diag(s[:d])
-        V_reduced = v[:d, :]
-        matrix_svd = U_reduced @ S_reduced @ V_reduced
-        
-        # Calculamos la matriz de coeficientes
-        A = np.linalg.inv(S_reduced) @ U_reduced.T
-        # A = np.linalg.pinv(U_reduced @ S_reduced)
-        
-        # Calculamos los coeficientes
-        beta = A @ y
-        
-        # Calculamos el error
-        error = np.linalg.norm(matrix @ V_reduced.T @ beta - y) / np.linalg.norm(y)
-
-        errors.append(error)
-        dimensions.append(d)
-    
-    best_dimension = dimensions[np.argmin(errors)]    
-            
-    plt.figure()
-    plt.plot(dimensions, errors)
-    plt.title("Error relativo entre normas en función de la dimensión")
-    plt.xlabel("Dimensión")
-    plt.ylabel("% de Error")
-    # plt.ylim(0.75, 0.80)
-    plt.show()
-    
-    print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
         
 if __name__ == '__main__':
     deviation = 1
@@ -172,8 +124,7 @@ if __name__ == '__main__':
     matrix = processMatrix(path)
     
     if iterate:
-        # iterateDimensions(matrix, deviation, dimensions)
+        iterateDimensions(matrix, deviation, dimensions)
         iterateDeviation(matrix)
     else:
-        # reduceDimensions(matrix, deviation, 2)
-        leastSquares(matrix, labels)
+        reduceDimensions(matrix, deviation, 2)

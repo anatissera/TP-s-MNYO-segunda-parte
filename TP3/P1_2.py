@@ -18,7 +18,7 @@ def plot_singular_values(X, indices=[3, 7, 11]):
     S = S[:102]
     
     plt.figure(figsize=(10, 6))
-    plt.plot(S, label='Valores singulares $\sigma_i$')
+    plt.plot(S, label='Valores singulares $\sigma_i$', color = "darkcyan", linewidth=2)
 
     styles = ['dotted', 'dashed', 'dashdot']
     colors = ['magenta', 'orange', 'grey']

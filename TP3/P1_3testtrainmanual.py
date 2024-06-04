@@ -133,7 +133,20 @@ def plot_singular_values(S):
     plt.grid(True)
     plt.show()
     
-
+def graficar_y_pred_vs_y_real(y1, y_pred1, y2, y_pred2):
+    plt.figure()
+    plt.plot(range(len(y1)), y1, 'o', label='Train Real', )
+    plt.plot(range(len(y_pred1)), y_pred1, 'o', label='Train Aproximación')
+    plt.plot(range(len(y2)), y2, 'o', label='Test Real', )
+    plt.plot(range(len(y_pred2)), y_pred2, 'o', label='Test Aproximación')
+    plt.title("Comparación entre valores reales y aproximados")
+    plt.xlabel("Índice")
+    plt.ylabel("Valor")
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
+    
 def main():
     x, y = load_data()
     X = normalize_dataset(x)
@@ -143,30 +156,15 @@ def main():
     X_train, X_test, y_train, y_test = shuffle_split(X, labels, test_size=0.2, random_state=42)
     
     best_dimension = plot_prediction_errors_train_test(X_train, y_train, X_test, y_test)
-   
-    X_pca_3, _ = generate_pca(X_train, 3)
-    X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, y_train, 3)
     
-    plot_beta_weights(beta_3)
-    plot_singular_values(S_3)
     
-    plot_3d(X_pca_3, y_train, beta_3)
+    X_train_pca, Vt_d = generate_pca(X_train, 2)
+    _, beta, train_error, _ = svd_least_squares_PCA(X_train_pca, y_train, 2)
+        
+    X_test_pca = X_test @ Vt_d.T
     
-    # Evaluar el modelo en el conjunto de prueba
-    X_test_pca_3 = X_test @ _[:3, :].T
-    y_test_pred_3 = X_test_pca_3 @ beta_3
-    plot_predictions_vs_observations_2D(y_test, y_test_pred_3)
+    graficar_y_pred_vs_y_real(y_train, X_train_pca @ beta, y_test, X_test_pca @ beta)
     
-    X_pca_2, Vt_d_2 = generate_pca(X_train, 2)
-    X_pseudo_inv_2, beta_2, error_2, S_2 = svd_least_squares_PCA(X_pca_2, y_train, 2)
-    
-    plot_beta_weights(beta_2)
-    
-    # Proyecto X a 2d
-    X_proj = X @ Vt_d_2.T
-    y_pred_2D = X_proj @ beta_2
-    
-    plot_predictions_vs_observations_2D(labels, y_pred_2D)    
 
 if __name__ == "__main__":
     main()

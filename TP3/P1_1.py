@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import euclidean_distances
 
+
 labels = np.loadtxt('tp3/y.txt')
 
 def load_data():
@@ -38,7 +39,15 @@ def load_data():
 
     # # Eliminar la primera columna
     df = df.iloc[:, 1:]
+    
     # df.drop(0, axis=1)
+    
+    # elimina las últimas 6 columnas
+    X = df.drop(df.columns[100:], axis=1)
+    
+    # elimina las primeras 100 columnas
+    # X = df.drop(df.columns[:100], axis=1)
+
 
     X = df.to_numpy()
     
@@ -106,7 +115,7 @@ def plot_similarity_matrix(matrix, deviation, dim):
     plt.show()
     
     if dim == 2:
-        plt.scatter(matrix[:, 0], matrix[:, 1], c=labels, cmap='ocean', marker='o')
+        plt.scatter(matrix[:, 0], matrix[:, 1], c = "darkcyan",  marker='o')
         plt.title(f"Distrbución con reducción de dimensiones a {dim}")
         plt.show()
         return
@@ -164,14 +173,14 @@ def plot_similarity_matrices(matrices, titles):
 
 def compute_reconstruction_error(A, U_d, S_d, VT_d):
     A_d = np.dot(U_d, np.dot(S_d, VT_d))
-    errors = np.linalg.norm(A - A_d, axis=1)
+    errors = np.linalg.norm(A - A_d, axis=1) 
     total_error = np.sum(errors)
     return total_error
 
 def plot_reconstruction_error(X, deviation, dims):
     
     errors = []
-    colors = ['cadetblue', 'skyblue', 'steelblue', 'teal']
+    colors = ['darkcyan', 'skyblue', 'steelblue', 'teal']
     
     for i, dim in enumerate(dims):
         Z, U_d, S_d, VT_d = pca_with_svd(X, dim)
@@ -190,29 +199,35 @@ def plot_reconstruction_error(X, deviation, dims):
 def plot_componentes_principales(Z):
     plt.figure(figsize=(12, 8))
     sns.heatmap(Z, cmap='coolwarm', cbar=True)
-    plt.title('Matriz $T = US$')
+    plt.title('Matriz $Z = US$')
     plt.xlabel('Componentes')
     plt.ylabel('Muestras')
     plt.show()
     
-
+    
 def main():
     X, labels = load_data()
+    X = normalize_dataset(X)
+    X_reduced2d = pca_with_svd(X, 2)
+
+    
     dims = [2, 6, 10,  X.shape[1]]
     
     deviation = 1
     
-    for dim in dims[:-1]:
-        Z, U_d, S_d, VT_d = pca_with_svd(X, dim)
-        plot_similarity_matrix(Z, deviation, dim)
-        plot_componentes_principales(Z)
+    # for dim in dims[:-1]:
+    #     Z, U_d, S_d, VT_d = pca_with_svd(X, dim)
+    #     plot_similarity_matrix(Z, deviation, dim)
+    #     plot_componentes_principales(Z)
         
+    # plot_similarity_matrix(X, deviation, X.shape[1])
+    # Z, U_d, S_d, VT_d = pca_with_svd(X, X.shape[1])
+    # plot_componentes_principales(Z)
+    
+    # plot_reconstruction_error(X, deviation, dims)
+    
     plot_similarity_matrix(X, deviation, X.shape[1])
-    Z, U_d, S_d, VT_d = pca_with_svd(X, X.shape[1])
-    plot_componentes_principales(Z)
-    
-    plot_reconstruction_error(X, deviation, dims)
-    
+
     
 if __name__ == '__main__':
     main()

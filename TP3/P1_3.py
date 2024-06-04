@@ -111,26 +111,45 @@ def plot_singular_values(S):
     plt.grid(True)
     plt.show()
     
+def graficar_y_pred_vs_y_real(y, y_pred):
+    plt.figure()
+    plt.plot(range(len(y)), y, 'o', label='Real', )
+    plt.plot(range(len(y_pred)), y_pred, 'o', label='Aproximación')
+    plt.title("Comparación entre valores reales y aproximados")
+    plt.xlabel("Índice")
+    plt.ylabel("Valor")
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
 
 def main():
     x, y = load_data()
     X = normalize_dataset(x)
     labels = normalize_dataset(y)
     
-    best_dimension = plot_prediction_errors(X, labels)
+    # best_dimension = plot_prediction_errors(X, labels)
    
-    X_pca_3, _ = generate_pca(X, 3)
-    X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, labels, 3)
+    # X_pca_3, _ = generate_pca(X, 3)
+    # X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, labels, 3)
     
-    plot_beta_weights(beta_3)
-    plot_singular_values(S_3)
+    _, beta, train_error, _ = svd_least_squares_PCA(X, labels, X.shape[1])
     
-    plot_3d(X_pca_3, labels, beta_3)
+    print(beta)
+    
+    plot_beta_weights(beta)
+    
+    # plot_singular_values(S_3)
+    
+    # plot_3d(X_pca_3, labels, beta_3)
     
     
     X_pca_2, Vt_d_2 = generate_pca(X, 2)
     X_pseudo_inv_2, beta_2, error_2, S_2 = svd_least_squares_PCA(X_pca_2, labels, 2)
     
+    graficar_y_pred_vs_y_real(labels, X_pca_2 @ beta_2)
+    
+  
     plot_beta_weights(beta_2)
     
     # proyecto X a 2d
