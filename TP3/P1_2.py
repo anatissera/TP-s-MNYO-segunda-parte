@@ -6,42 +6,41 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import euclidean_distances
 
-from P1_1 import load_data, normalize_dataset, normalize_dataset_martin
+from P1_1 import load_data, normalize_dataset, normalize_dataset_martin, similarity_matrix, pca_with_svd
 
 
-def plot_singular_values(X, indices=[3, 7, 11]):
+def plot_singular_values(X, indices=[1, 5, 9]):
  
     U, S, Vt = np.linalg.svd(X, full_matrices=False)
     
     S = S[:102]
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(S, label='Valores singulares $\sigma_i$', color = "darkcyan", linewidth=2)
+    plt.figure(figsize=(15, 5))
+    plt.plot(range(1, len(S) +1 ), S, 'o-', label='Valores singulares $\sigma_i$', color="darkcyan", linewidth=1.5, markersize=2.4)
 
     styles = ['dotted', 'dashed', 'dashdot']
     colors = ['magenta', 'orange', 'grey']
     
     for idx, style, color in zip(indices, styles, colors):
-        plt.plot(idx, S[idx], 'o', color=color, markersize = 4) 
-        plt.vlines(x=idx, ymin=S[-1], ymax=S[idx], color=color, linestyle=style, label=f'd={(idx)}')
-        plt.hlines(y=S[idx], xmin=0, xmax=idx, color=color, linestyle=style)
+        plt.plot(idx+1, S[idx], 'o', color=color, markersize=5) 
+        plt.vlines(x=idx+1, ymin=0, ymax=S[idx], color=color, linestyle=style, label=f'd={idx+1}')
+        plt.hlines(y=S[idx], xmin=0, xmax=idx+1, color=color, linestyle=style)
+        
+    print(f"Valores singulares para d = 1: {S[0]:.4f}")
+    for idx in indices:
+        print(f"Valores singulares para d = {idx}: {S[idx-1]:.4f}")
+    print(f"Valores singulares para d = 102: {S[101]:.4f}")
     
-    print (f"Valores singulares para d = 2: {S[1]:.4f}")
-    print (f"Valores singulares para d = 6: {S[5]:.4f}")
-    print (f"Valores singulares para d = 10: {S[9]:.4f}")
-    print (f"Valores singulares para d = 102: {S[101]:.4f}")
-    print (f"Valores singulares para d = 1: {S[0]:.4f}")
-    
-    print (f"Diferencia d = 10 - d = 2: {S[9] - S[1]:.4f}")
-    
+    print(f"Diferencia d = 10 - d = 2: {S[9] - S[0]:.4f}")
     
     plt.yscale('log')
-    plt.xlabel('$i$', fontsize=17)
-    plt.ylabel('Valores singulares $\sigma_i$', fontsize=17)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=25)
+    plt.xlabel('$i$', fontsize=16)
+    plt.ylabel('Valores singulares $\sigma_i$', fontsize=16)
     plt.title('Figura de los valores singulares del dataset $X \{\sigma_i\}_{i=1}^{102}$', fontsize=18)
-    plt.legend(fontsize = 14)
+    plt.legend(fontsize=15)
     plt.grid(False)
     plt.show()
 
@@ -73,7 +72,7 @@ def valores_singulares_acumulada(dataset):
     plt.legend(fontsize=14)
     plt.grid(False)
     plt.show()
-    
+
 
     print(f"Varianza acumulada para d = 1: {proporcion_acumulada[0]:.4f}")
     print(f"Varianza acumulada para d = 2: {proporcion_acumulada[1]:.4f}")
@@ -119,16 +118,44 @@ def main():
     X, Y = load_data()
     dims = [2, 6, 10]
     
-    # plot_singular_values(X, dims)
-    plot_singular_values(normalize_dataset(X), dims)
+    X = normalize_dataset(X)
     
-    # valores_singulares_acumulada(X)
-    valores_singulares_acumulada(normalize_dataset(X))
-    
-    # media_acumulada_valores_singulares(X)
-    media_acumulada_valores_singulares(normalize_dataset(X))
+    plot_singular_values(X)
 
+    valores_singulares_acumulada(X)
+
+    media_acumulada_valores_singulares(X)
     
+    _, _, _, vt = pca_with_svd(X, 2)
+    correlation_matrix= similarity_matrix(X.T, 1)
+
+    plt.figure()
+    plt.bar(range(1, len(vt[0])+1), (vt[0, :]), color='darkcyan')
+    plt.title("Primer Vector de $V^T$", fontsize = 16)
+    plt.xlabel("Componente", fontsize = 14)
+    plt.ylabel("Valor del Componente", fontsize = 14)
+    # plt.xticks(range(1, len(vt[0])+1), [str(i+101) for i in range(len(vt[0]))])
+    plt.grid()
+    plt.show()
+        
+    plt.figure(figsize=(8, 8))
+    plt.imshow(X, aspect='auto', cmap='viridis')
+    plt.colorbar()
+    plt.title("Matriz original", fontsize=18)
+    plt.xlabel("Características", fontsize=15)
+    plt.ylabel("Muestras", fontsize=15)
+    plt.tight_layout()
+    if X.shape[1] >= 100:
+        plt.axvline(x=100, color='yellow')
+    plt.show()
+    
+
+    plt.figure(figsize=(8, 8))
+    sns.heatmap(correlation_matrix, annot=False, cmap='Spectral', center=0)
+    plt.title('Similaridad entre columnas de la matriz de datos', fontsize=16)
+    plt.xlim(1, 106)
+    plt.ylim(106, 1)
+    plt.show()
+
 if __name__ == "__main__":
     main()
-    

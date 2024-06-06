@@ -1,36 +1,8 @@
-# En el archivo dataset.csv se encuentra el dataset X. Este contiene un conjunto de n muestras que fueron
-# medidas a través de un sensor
-# {x1, x2, . . . , xi, . . . , xn}
-# con xi ∈ R^p
-# (X es por lo tanto una matriz de n×p dimensiones). Si bien el conjunto tiene, a priori, dimensión
-# alta, es de interés entender visualmente como se distribuyen las muestras. Suponemos que las muestras no
-# se distribuyen uniformemente en el espacio R^p , por lo que podremos encontrar grupos de muestras (clusters)
-# con alta similaridad entre sí. La similaridad entre un par de muestras xi, xj se puede medir utilizando una
-# función no-lineal de su distancia euclidiana
-
-# s(xi, xj) = exp(−||xi − xj||^2/2σ^2)
-
-# para algún valor de σ.
-# Como la dimensionalidad inicial del dataset es muy alta y se supone que algunas dimensiones son mas
-# ruidosas que otras en las muestras, va a ser conveniente trabajar en un espacio de dimensión reducida d.
-# Para hacer esto hay que realizar una descomposición de X en sus valores singulares, reducir la dimensión de
-# esta representación, y luego trabajar con los vectores x proyectados al nuevo espacio reducido Z, es decir
-# z = V^T_d x. Realizar los puntos anteriores para d = 2, 6, 10, y p. ¿Para qué elección de d resulta más
-# conveniente hacer el análisis? ¿Cómo se conecta esto con los valores singulares de X? ¿Qué conclusiones
-# puede sacar al respecto?
-
-
-# 1. Determinar la similaridad par-a-par entre muestras en el espacio de dimension X y en el espacio
-# de dimensión reducida d para distintos valores de d utilizando PCA. Comparar estas medidas de
-# similaridad. Ayuda: ver de utilizar una matriz de similaridad para visualizar todas las similaridades
-# par-a-par juntas.
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import euclidean_distances
-
+from sklearn.cluster import AgglomerativeClustering
 
 labels = np.loadtxt('tp3/y.txt')
 
@@ -48,7 +20,6 @@ def load_data():
     # elimina las primeras 100 columnas
     # X = df.drop(df.columns[:100], axis=1)
 
-
     X = df.to_numpy()
     
     # labels = pd.read_csv("TP3/y.txt").to_numpy().ravel()
@@ -56,6 +27,11 @@ def load_data():
     
     return X, labels
 
+def euclidean_distances(X):
+    XXT = X @ X.T
+    norms = np.diag(XXT)
+    distances = np.sqrt(norms[:, np.newaxis] + norms[np.newaxis, :] - 2 * XXT)
+    return distances
 
 def normalize_dataset(dataset):
     return (dataset - np.mean(dataset, axis=0))
@@ -115,21 +91,24 @@ def plot_similarity_matrix(matrix, deviation, dim):
     plt.show()
     
     if dim == 2:
-        plt.scatter(matrix[:, 0], matrix[:, 1], c = "darkcyan",  marker='o')
-        plt.title(f"Distrbución con reducción de dimensiones a {dim}")
-        plt.show()
-        return
-    elif dim == 3:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        scatter = ax.scatter(matrix[:, 0], matrix[:, 1], matrix[:, 2], cmap='ocean', c=labels, marker='o')
-        # fig.colorbar(scatter, ax=ax)
-        plt.title(f"Distribución ocn reducción de dimensiones a {dim}")
-        plt.show()
-        return
-    else:
-        return
-    
+        Z, _, _, _ = pca_with_svd(matrix, dim)
+        n_clusters = 2  # Ajustar
+        labels = apply_agglomerative_clustering(Z, n_clusters)
+        visualize_clusters(Z, labels)
+ 
+
+def visualize_clusters(X, labels):
+    plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='Spectral', alpha=0.5)
+    plt.title('Distribución con reducción a dos dimensiones y visualización de clusters', fontsize=16)
+    plt.xlabel('Feature 1', fontsize=14)
+    plt.ylabel('Feature 2', fontsize=14)
+    plt.show()
+
+def apply_agglomerative_clustering(X, n_clusters):
+    agglomerative_model = AgglomerativeClustering(n_clusters=n_clusters)
+    labels = agglomerative_model.fit_predict(X)
+    return labels
+
 
 def plot_matrices(dataset):
     U, S, Vt = np.linalg.svd(dataset, full_matrices=False)
@@ -215,19 +194,18 @@ def main():
     
     deviation = 1
     
-    # for dim in dims[:-1]:
-    #     Z, U_d, S_d, VT_d = pca_with_svd(X, dim)
-    #     plot_similarity_matrix(Z, deviation, dim)
-    #     plot_componentes_principales(Z)
+    for dim in dims[:-1]:
+        Z, U_d, S_d, VT_d = pca_with_svd(X, dim)
+        plot_similarity_matrix(Z, deviation, dim)
+        plot_componentes_principales(Z)
         
-    # plot_similarity_matrix(X, deviation, X.shape[1])
-    # Z, U_d, S_d, VT_d = pca_with_svd(X, X.shape[1])
-    # plot_componentes_principales(Z)
+    plot_similarity_matrix(X, deviation, X.shape[1])
+    Z, U_d, S_d, VT_d = pca_with_svd(X, X.shape[1])
+    plot_componentes_principales(Z)
     
-    # plot_reconstruction_error(X, deviation, dims)
+    plot_reconstruction_error(X, deviation, dims)
     
     plot_similarity_matrix(X, deviation, X.shape[1])
 
-    
 if __name__ == '__main__':
     main()
