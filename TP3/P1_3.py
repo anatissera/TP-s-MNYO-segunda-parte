@@ -50,17 +50,20 @@ def plot_prediction_errors(X, y):
     best_dimension = dims[np.argmin(errors)]
     plt.figure(figsize=(12, 6))
     plt.plot(dims, errors, 'o-', markersize=2.5, color="darkcyan", linewidth=2)
-    plt.xlabel('Dimensiones', fontsize=14)
-    plt.ylabel('Error de predicción cuadrático (norma 2)', fontsize=14)
-    plt.title('Error de predicción cuadrático para diferentes dimensiones', fontsize=15)
+    plt.xlabel('Dimensiones', fontsize=16)
+    plt.ylabel('Error de predicción cuadrático (norma 2)', fontsize=16)
+    plt.title('Error de predicción cuadrático para diferentes dimensiones', fontsize=20)
     plt.grid(False)
     plt.show()
     print(f"La mejor dimensión es {best_dimension} con un error de {errors[best_dimension-1]}")
+    print (f"El error de predicción para d = 2 es {errors[1]}")
     return best_dimension
 
 def plot_beta_weights(beta):
     plt.figure(figsize=(12, 6))
     plt.bar(range(1, len(beta) + 1), beta)
+
+    
     plt.title('Pesos del Vector β en el Espacio Original')
     plt.xlabel('Dimensiones Originales')
     plt.ylabel('Pesos de β')
@@ -111,6 +114,17 @@ def plot_singular_values(S):
     plt.grid(True)
     plt.show()
     
+def graficar_y_pred_vs_y_real(y, y_pred):
+    plt.figure()
+    plt.plot(range(len(y)), y, 'o', label='Real', )
+    plt.plot(range(len(y_pred)), y_pred, 'o', label='Aproximación')
+    plt.title("Comparación entre valores reales y aproximados")
+    plt.xlabel("Índice")
+    plt.ylabel("Valor")
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
 
 def main():
     x, y = load_data()
@@ -122,14 +136,52 @@ def main():
     X_pca_3, _ = generate_pca(X, 3)
     X_pseudo_inv, beta_3, error, S_3 = svd_least_squares_PCA(X_pca_3, labels, 3)
     
-    plot_beta_weights(beta_3)
     plot_singular_values(S_3)
     
     plot_3d(X_pca_3, labels, beta_3)
     
-    
     X_pca_2, Vt_d_2 = generate_pca(X, 2)
     X_pseudo_inv_2, beta_2, error_2, S_2 = svd_least_squares_PCA(X_pca_2, labels, 2)
+    
+    y_pred = X_pca_2 @ beta_2
+    
+    # ahora quiero ver fila a fila los valores reales y los predichos, cuál minimiza la resta
+    #plotear y_pred - labels fila a fila
+    diferencia = y_pred - labels
+    minimo = np.argmin(np.abs(diferencia))
+    print(f"El mínimo error de predicción es {diferencia[minimo]} en la muestra {minimo}")
+    
+    _, beta, train_error, _ = svd_least_squares_PCA(X, labels, X.shape[1])
+    
+    # printear en orden descendiente el peso y su dimensión correspondiente
+    sorted_weights = sorted(enumerate(beta), key=lambda x: -abs(x[1]))
+    peso_ruido = 0
+    for i, weight in sorted_weights[6:]:
+        peso_ruido += np.abs(weight)
+        print(f"Dimensión {i+1}: {weight}")
+    print(f"El peso del ruido es {peso_ruido}")
+    heaviest_dimension = np.argmax(np.abs(beta))
+    print(heaviest_dimension)
+    plot_beta_weights(beta)
+    
+    plt.figure(figsize=(10, 6))
+    plt.scatter(range(len(labels)), labels, label='Valores reales', color='blue')
+    plt.scatter(range(len(y_pred)), y_pred, label='Valores predichos', color='red')
+    plt.xlabel('Fila')
+    plt.ylabel('Valor')
+    plt.title('Valores reales vs Valores predichos')
+    plt.legend()
+    plt.show()
+
+    # Graficamos la diferencia entre los valores predichos y los reales
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(len(diferencia)), diferencia)
+    plt.xlabel('Fila')
+    plt.ylabel('Diferencia')
+    plt.title('Diferencia entre valores predichos y reales')
+    plt.show() 
+    
+    graficar_y_pred_vs_y_real(labels, X_pca_2 @ beta_2)
     
     plot_beta_weights(beta_2)
     
@@ -138,7 +190,6 @@ def main():
     y_pred_2D = X_proj @ beta_2
     
     plot_predictions_vs_observations_2D(labels, y_pred_2D)    
-    
 
 if __name__ == "__main__":
     main()
