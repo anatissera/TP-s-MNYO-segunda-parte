@@ -82,7 +82,6 @@ Z_pca = Z_pca.reshape(xx_pca.shape)
 
 levels = 25  # número de curvas de isocosto
 
-
 plt.figure(figsize=(14, 6))
 
 # Sin regularización

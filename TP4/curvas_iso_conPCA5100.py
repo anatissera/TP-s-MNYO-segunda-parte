@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 n = 5  # Problem dimension
 d = 100  # Parameter space dimension
 iterations = 100
-delta2 = 1e-2
+
 
 # Random matrices and vectors generation
 np.random.seed(0)  # For reproducibility
@@ -37,12 +37,14 @@ U, sigma, VT = np.linalg.svd(A, full_matrices=False)
 sigma_max = np.max(sigma)
 lambda_max = sigma_max**2
 
+delta2 = 1e-2 * sigma_max
+
 # Learning step sin regularización
 s = 1 / lambda_max
 
-# Learning step con regularización L2
-lambda_max_reg = 2 * lambda_max + 2 * delta2
-s2 = 1 / lambda_max_reg
+# # Learning step con regularización L2
+# lambda_max_reg = 2 * lambda_max + 2 * delta2 * np.sqrt(sigma_max)
+# s2 = 1 / lambda_max_reg
 
 # Gradient descent sin regularización
 x_gd = x0.copy()
@@ -57,7 +59,7 @@ x_gd_reg = x0.copy()
 history_F2 = [x_gd_reg.copy()]
 
 for i in range(iterations):
-    x_gd_reg -= s2 * gradF2(x_gd_reg, delta2)
+    x_gd_reg -= s * gradF2(x_gd_reg, delta2)
     history_F2.append(x_gd_reg.copy())
 
 history_F = np.array(history_F)
