@@ -8,6 +8,17 @@ d = 100
 A = np.random.rand(n, d)
 b = np.random.rand(n)
 
+# # Configurations
+# n = 2  # Problem dimension
+# d = 2  # Parameter space dimension
+# iterations = 100
+# delta2 = 1e-2
+
+# # Random matrices and vectors generation
+# np.random.seed(0) 
+# A = np.random.randn(n, d)
+# b = np.random.randn(n)
+
 def F(x):
     """Calcula la función de costo F(x) = (Ax - b)^T (Ax - b)."""
     return np.linalg.norm(A @ x - b)**2

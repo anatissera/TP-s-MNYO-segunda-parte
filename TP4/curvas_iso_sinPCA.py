@@ -9,7 +9,7 @@ delta2 = 1e-2
 
 # Generación de matrices y vectores aleatorios
 np.random.seed(0)  # Para reproducibilidad
-A = np.random.randn(n, d)
+A = np.random.randn(n, d) # me devuelve una matriz de estas dimensiones
 b = np.random.randn(n)
 
 # Función de costo sin regularización
@@ -40,7 +40,7 @@ lambda_max = sigma_max**2
 s = 1 / lambda_max
 
 # Paso de aprendizaje con regularización
-lambda_max_reg = 2 * sigma_max**2 + 2 * delta2
+lambda_max_reg = 2 * lambda_max + 2 * delta2
 s2 = 1 / lambda_max_reg
 
 # Gradiente descendente sin regularización
@@ -59,11 +59,10 @@ for i in range(iterations):
     x_gd_reg -= s2 * gradF2(x_gd_reg, delta2)
     history_F2.append(x_gd_reg.copy())
 
-# Convertir historial a arrays de NumPy para facilitar la graficación
 history_F = np.array(history_F)
 history_F2 = np.array(history_F2)
 
-# Generar una malla para las curvas de isocosto
+# Generar una malla para las curvas de isocosto porque no uso PCA
 x_range = np.linspace(-4, 4, 400)
 y_range = np.linspace(-4, 4, 400)
 X, Y = np.meshgrid(x_range, y_range)
@@ -81,7 +80,7 @@ plt.figure(figsize=(14, 6))
 
 plt.subplot(1, 2, 1)
 plt.contour(X, Y, Z, levels=50, cmap='viridis')
-plt.plot(history_F[:, 0], history_F[:, 1], 'o-', color='salmon', label='Trayectoria GD')
+plt.plot(history_F[:, 0], history_F[:, 1], 'o-', color='orangered', label='Trayectoria GD')
 plt.title('Curvas de Isocosto (Sin Regularización)')
 plt.xlabel('x1')
 plt.ylabel('x2')
@@ -89,7 +88,7 @@ plt.legend()
 
 plt.subplot(1, 2, 2)
 plt.contour(X, Y, Z2, levels=50, cmap='viridis')
-plt.plot(history_F2[:, 0], history_F2[:, 1], 'o-', color='red', label='Trayectoria GD Regularizado')
+plt.plot(history_F2[:, 0], history_F2[:, 1], 'o-', color='orangered', label='Trayectoria GD Regularizado')
 plt.title('Curvas de Isocosto (Con Regularización)')
 plt.xlabel('x1')
 plt.ylabel('x2')
