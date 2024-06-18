@@ -19,18 +19,16 @@ def grad_F(x):
 def hessiano_F(A): # es la segunda derivada de F(x) porque depende de una sola variable
     """Calcula el Hessiano de F(x)."""
     return 2 * A.T @ A 
-# Para encontrar los autovalores del Hessiano H=2A^TA, resolvemos el problema de autovalores: det(2A^TA−λI)=0
-
-# Los autovalores λ i de 2 A^TA son proporcionales a los cuadrados de los valores singulares σ i de la matriz A. 
-# Esto se debe a que A^TA y AA^T comparten los mismos valores singulares.
-
 
 # Función de costo F2(x) con regularización L2
 def F2(x, delta2):
+    """Calcula la función de costo F2(x) = F(x) + delta2 * ||x||^2.
+    """
     return F(x) + delta2 * np.linalg.norm(x)**2
 
 # Gradiente de F2(x)
 def grad_F2(x, delta2):
+    """Calcula el gradiente de F2(x)."""
     return grad_F(x) + 2 * delta2 * x
 
 # Gradiente descendente
@@ -44,7 +42,6 @@ def gradient_descent(grad_func, x0, step_size, max_iter, delta2=None):
             x = x - step_size * grad_func(x)
         history.append(x)
     return np.array(history)
-
 
 
 
@@ -164,7 +161,12 @@ def main():
 
     # Parámetros de regularización
     delta2_values = [0.01, 0.1, 1, 10, 100]
-
+    
+    # me falta delta2 que son los valores singulares de A para hacer delta2 = const_delta(lo que iteras en la lista) * sigma_max
+    delta2 = 1e-5 * np.max(np.linalg.svd(A, full_matrices=False, compute_uv=False))
+    # delta2 = 1e-5 * np.linalg.norm(A, 2)
+    # ??
+    
     # Gráficos para diferentes valores de delta2
     colors = ['lightcoral', 'peachpuff', 'seagreen', 'cadetblue', 'midnightblue']
     markers = ['o', 's', 'd', 'x', '+']
