@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 n = 5  # Problem dimension
 d = 100  # Parameter space dimension
 iterations = 100
-delta2 = 1e-2
+
 
 # Random matrices and vectors generation
 np.random.seed(0)  # For reproducibility
@@ -34,7 +34,9 @@ x0 = np.random.randn(d)
 
 sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
 sigma_max = np.max(sigma)
-lambda_max = 2 * sigma_max**2
+# lambda_max = 2*sigma_max**2
+lambda_max = sigma_max**2
+delta2 = 1e-2 * sigma_max
 
 s = 1 / lambda_max
 s2 = s.copy()
@@ -74,8 +76,8 @@ history_F2_pca = pca.transform(history_F2)
 # Adjust mesh grid range to cover a broader area
 x_range = np.ptp(history_F_pca[:, 0])  # Range of x in PCA-transformed space
 y_range = np.ptp(history_F_pca[:, 1])  # Range of y in PCA-transformed space
-x_min_pca, x_max_pca = -1, 1
-y_min_pca, y_max_pca = -1, 1
+x_min_pca, x_max_pca = -1.5, 2
+y_min_pca, y_max_pca = -1.5, 2
 # Generate a new mesh grid in the PCA-transformed space
 xx_pca, yy_pca = np.meshgrid(np.linspace(x_min_pca, x_max_pca, 100), np.linspace(y_min_pca, y_max_pca, 100))
 
@@ -83,7 +85,7 @@ xx_pca, yy_pca = np.meshgrid(np.linspace(x_min_pca, x_max_pca, 100), np.linspace
 mesh_points_pca_inverse = pca.inverse_transform(np.c_[xx_pca.ravel(), yy_pca.ravel()])
 
 # Compute iso-cost values for the transformed back mesh grid
-Z_pca = np.array([F(np.array([x, y])) for x, y in mesh_points_pca_inverse])
+Z_pca = np.array([F(np.array(points)) for points in mesh_points_pca_inverse])
 Z_pca = Z_pca.reshape(xx_pca.shape)
 
 levels = 25  # Number of iso-cost curves

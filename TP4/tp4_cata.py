@@ -7,8 +7,6 @@ import plotly.io as pio
 
 # Definición de funciones de costo y gradientes
 def F(x, _ = 0):
-    # system = A @ x - b
-    # return system.T @ system
     return np.linalg.norm(A @ x - b)**2
 
 def F2(x, delta2):
@@ -20,8 +18,6 @@ def gradF(x):
 def gradF2(x, delta2):
     return gradF(x) + 2 * delta2 * x
 
-# Generación de datos
-# np.random.seed(69 + 420 + int(9/11) + 80085)  # Para reproducibilidad
 np.random.seed(0)
 n, d = 5, 100
 A = np.random.randn(n, d)
@@ -30,20 +26,19 @@ x0 = np.random.randn(d)
 
 iterations = 1000
 
-# Descomposición en valores singulares para obtener λ_max y σ_max
 sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
 sigma_max = np.max(sigma)
 
 # HF1(x) = 2 * A.T @ A
-lambda_max = 2 * sigma_max**2 # https://en.wikipedia.org/wiki/Singular_value_decomposition, Relation to eigenvalue decomposition, multiplico por 2 porque el hessiano es 2*(A.T @ A)
+lambda_max = 2 * sigma_max**2 # multiplico por 2 porque el hessiano es 2*(A.T @ A)
 
 delta_constants = [0.01, 0.05, 0.1, 1, 10]  # Constante de regularización
+
+delta2 = 1e-2 * sigma_max
 
 # Paso de aprendizaje
 step = 1 / lambda_max
 
-# HF2(x) = 2 * A.T @ A + 2 * delta2 * I
-# step_size_f2 = 1 / (lambda_max + 2 * delta2) # Para regularización uso el valor de λ_max + 2 * δ^2. ver https://chatgpt.com/share/d769e0c4-ec21-4396-be64-032f18cf483d
 
 def gradient_descent(x0, iterations, step, regularization=False, delta2 = 0):
     x = x0.copy()
@@ -194,8 +189,8 @@ def plot_isocost_contour_and_path():
     # Grafica el contorno de los costos
     plt.figure(figsize=(10, 8))
     plt.subplot(1, 2, 1)
-    plt.contourf(xx, yy, zz, levels=50, cmap='rainbow', alpha=0.15)
-    plt.contour(xx, yy, zz, levels=50, cmap='rainbow')
+    plt.contourf(xx, yy, zz, levels=50, cmap='viridis', alpha=0.15)
+    plt.contour(xx, yy, zz, levels=50, cmap='viridis')
     plt.plot(history_transformed_f1[:, 0], history_transformed_f1[:, 1], 'r-o', markersize=3, linewidth=2, label='Trayectoria GD con $F(x)$')
     plt.scatter(svd_solution[0], svd_solution[1], color='teal', label='Solución SVD', s=100)
     plt.xlabel('Componente Principal 1')
@@ -204,8 +199,8 @@ def plot_isocost_contour_and_path():
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.contourf(xx, yy, zz, levels=50, cmap='rainbow', alpha=0.15)
-    plt.contour(xx, yy, zz, levels=50, cmap='rainbow')
+    plt.contourf(xx, yy, zz, levels=50, cmap='viridis', alpha=0.15)
+    plt.contour(xx, yy, zz, levels=50, cmap='viridis')
     plt.plot(history_transformed_f2[:, 0], history_transformed_f2[:, 1], 'g-o', markersize=3, linewidth=2, label=f'Trayectoria GD con $F_2(x)$ y $\delta_2 = {delta}$')
     plt.plot(history_transformed_f2_2[:, 0], history_transformed_f2_2[:, 1], 'b-o', markersize=3, linewidth=2, label=f'Trayectoria GD con $F_2(x)$ y $\delta_2 = 1$')
     plt.plot(history_transformed_f2_3[:, 0], history_transformed_f2_3[:, 1], 'm-o', markersize=3, linewidth=2, label=f'Trayectoria GD con $F_2(x)$ y $\delta_2 = 5$')
@@ -219,7 +214,7 @@ def plot_isocost_contour_and_path():
     plt.show()
 
     # plt.figure()
-    # plt.contour(xx, yy, zz, levels=50, cmap='jet')
+    # plt.contour(xx, yy, zz, levels=50, cmap='viridis')
     # plt.plot(history_transformed_f1[:, 0], history_transformed_f1[:, 1], 'r-o', markersize=3, linewidth=2, label='Trayectoria GD con $F(x)$')
     # plt.plot(history_transformed_f2[:, 0], history_transformed_f2[:, 1], 'b-o', markersize=3, linewidth=2, label=f'Trayectoria GD con $F_2(x)$ y $\delta_2 = {delta}$')
     # plt.scatter(svd_solution[0], svd_solution[1], color='teal', label='Solución SVD', s=100)
@@ -321,12 +316,12 @@ def compareSteps():
     plt.show()
 
 if __name__ == '__main__':
-    # plotF1()
-    # plotF2()
-    # showRelativeErrors()
-    # plotNormOfX()
+    plotF1()
+    plotF2()
+    showRelativeErrors()
+    plotNormOfX()
     plot_isocost_contour_and_path()
-    # compareSteps()
+    compareSteps()
 
     # plot_isocost_contour_and_path_2d()
-    # plot_isocost_contour_and_path_3d()
+    plot_isocost_contour_and_path_3d()
