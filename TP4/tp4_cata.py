@@ -59,7 +59,7 @@ def gradient_descent(x0, iterations, step, regularization=False, delta2 = 0):
 # Calculo la solución con SVD
 x_svd = np.linalg.pinv(A) @ b
 
-thickness = 3 # Esto en 50 es buenísimo
+thickness = 2.5
 
 def plotF1():
     # Grafico
@@ -69,25 +69,27 @@ def plotF1():
     _, history_f1, _ = gradient_descent(x0, iterations, step)
     _, history_f2, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
 
-    plt.plot(history_f1, linewidth=thickness, label="$F(x)$")
-    plt.plot(history_f2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ 0.01 $\cdot \sigma_{max}$")
-    plt.hlines(F(x_svd), 0, iterations, colors='red', linestyles='dashed', label='$F(x)$ de la solución SVD', linewidth=thickness)
+    plt.plot(history_f1, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    plt.plot(history_f2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
+    plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
 
     plt.xlabel('Iteraciones', fontsize=15)
-    plt.ylabel('Valor de $F(x)$ y $F_2(x)$', fontsize=15)
+    plt.ylabel('Valor de las funciones (en escala logarítmica)', fontsize=15)
     plt.legend(fontsize=14)  # Increase the font size to make the legend box bigger
     plt.yscale('log')
     plt.title('Evolución de $F(x)$ y $F_2(x)$ por iteración', fontsize=20)
-    plt.grid()
+    plt.grid(False)
     plt.show()
 
 def plotF2():
     # Grafico
     plt.figure()
-    for const in delta_constants:
+    colors = ['lightcoral', 'peachpuff', 'seagreen', 'cadetblue', 'midnightblue']
+    
+    for i, const in enumerate(delta_constants):
         delta2 = const * sigma_max
         _, history_f, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
-        plt.plot(history_f, linewidth=thickness, label=f"$F_2(x)$ con $\delta^2 = {const}$")
+        plt.plot(history_f, linewidth=thickness, label=f"$F_2(x)$ con $\delta^2 = {const}$", color = colors[i])
 
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de $F_2(x)$', fontsize=15)
@@ -100,18 +102,21 @@ def plotF2():
 
 def plotNormOfX():
     x_svd = np.linalg.pinv(A) @ b
-
+    
+    colors = ['lightcoral', 'peachpuff', 'seagreen', 'cadetblue', 'midnightblue']
+    
     plt.figure()
     plt.title('Norma de x por iteración', fontsize=20)
     _, _ , history_x1= gradient_descent(x0, iterations, step)
     plt.plot([np.linalg.norm(x) for x in history_x1], linewidth=thickness, label="$||x||_2$ con $F(x)$")
 
-    for const in delta_constants:
+    for i, const in enumerate(delta_constants):
         delta2 = const * sigma_max
         _, _, history_x2 = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
-        plt.plot([np.linalg.norm(x) for x in history_x2], linewidth=thickness, label=f"$||x||_2$ con $F_2(x)$ y $\delta^2$ = {const}")
+        plt.plot([np.linalg.norm(x) for x in history_x2], linewidth=thickness, label=f"$||x||_2$ con $F_2(x)$ y $\delta^2$ = {const}", color = colors[i])
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de la norma de x', fontsize=15)
+    
 
     plt.hlines(np.linalg.norm(x_svd), 0, iterations, colors='teal', linestyles='dashed', label='$||x||_2$ de la solución SVD', linewidth=thickness)
 
@@ -121,7 +126,8 @@ def plotNormOfX():
     plt.show()
 
 def showRelativeErrors():
-
+    colors = ['lightcoral', 'wheat', 'darkseagreen', 'cadetblue', 'steelblue', 'midnightblue']
+    
     def calc_error(x, x_svd, function=F2, delta=0):
         return np.abs(function(x, delta) - function(x_svd, delta))
 
@@ -132,13 +138,13 @@ def showRelativeErrors():
     error = calc_error(x_f1, x_svd, F)
 
     tick_labels = ['$F(x)$', '$F_2(x), \delta^2 = 0.01$', '$F_2(x), \delta^2 = 0.05$', '$F_2(x), \delta^2 = 0.1$', '$F_2(x), \delta^2 = 1$', '$F_2(x), \delta^2 = 10$']
-    plt.bar(0, error, label="$F(x)$", edgecolor='black')
+    plt.bar(0, error, label="$F(x)$", color = colors[0])
     for i in range(len(delta_constants)):
         delta = delta_constants[i]
         x_i, _, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta * sigma_max)
         error = calc_error(x_i, x_svd, F2, delta)
         print(f"Error relativo para δ^2 = {delta}: {error}")
-        plt.bar(i+1, error, label=f"$\delta^2 = {delta}$", edgecolor='black')
+        plt.bar(i+1, error, label=f"$\delta^2 = {delta}$", color = colors[i+1])
     # plt.xlabel('$\delta^2$', fontsize=15)
     plt.ylabel('Error absoluto de $||A \cdot x - b||_2$', fontsize=15)
     plt.legend(fontsize=14)  # Increase the font size to make the legend box bigger
@@ -298,15 +304,20 @@ def compareSteps():
     steps = [1/10, 21/10]
     plt.figure()
     plt.title('Evolución de $F(x)$ y $F_2(x)$ por iteración cambiando el paso', fontsize=20)
+    
     plt.hlines(F(x_svd), 0, iterations, colors='teal', linestyles='dashed', label='$F(x)$ de la solución SVD', linewidth=thickness)
-    for step_i in steps:
+    
+    # colors = ['lightcoral', 'peachpuff', 'seagreen', 'cadetblue', 'midnightblue']
+    colors = ['lightcoral', 'wheat', 'darkseagreen', 'cadetblue', 'steelblue', 'midnightblue']
+    
+    for i, step_i in enumerate(steps):
         step_f = step_i / lambda_max
         label = f"step = {step_i}" + "$\cdot \lambda_{max}^{-1}$"
         # label = "test"
         _, history_f1, _ = gradient_descent(x0, iterations, step_f)
-        plt.plot(history_f1, linewidth=thickness, label=("$F(x)$ con " + label))
+        plt.plot(history_f1, linewidth=thickness, label=("$F(x)$ con " + label), color = colors[i])
         _, history_f2, _ = gradient_descent(x0, iterations, step_f, regularization=True, delta2=0.01 * sigma_max)
-        plt.plot(history_f2, linewidth=thickness, label=("$F_2(x)$ con $\delta_2$ = $0.01 \cdot \sigma_{max}$ y" + label))
+        plt.plot(history_f2, linewidth=thickness, label=("$F_2(x)$ con $\delta_2$ = $0.01 \cdot \sigma_{max}$ y" + label), color = colors[i+1])
 
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de $F(x)$ y $F_2(x)$', fontsize=15)

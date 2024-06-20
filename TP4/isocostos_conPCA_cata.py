@@ -81,15 +81,12 @@ y_min_pca, y_max_pca = -1.5, 2
 # Generate a new mesh grid in the PCA-transformed space
 xx_pca, yy_pca = np.meshgrid(np.linspace(x_min_pca, x_max_pca, 100), np.linspace(y_min_pca, y_max_pca, 100))
 
-# Transform back the mesh grid points to the original space for iso-cost computation
 mesh_points_pca_inverse = pca.inverse_transform(np.c_[xx_pca.ravel(), yy_pca.ravel()])
 
-# Compute iso-cost values for the transformed back mesh grid
 Z_pca = np.array([F(np.array(points)) for points in mesh_points_pca_inverse])
 Z_pca = Z_pca.reshape(xx_pca.shape)
 
-levels = 25  # Number of iso-cost curves
-
+levels = 25  #
 # Plotting the transformed trajectories and iso-cost curves with a colorful cmap, without filling between curves
 plt.figure(figsize=(14, 6))
 
