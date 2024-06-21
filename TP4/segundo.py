@@ -81,15 +81,18 @@ def SVD(A, b):
 thickness = 2.5
 def plotF(x_svd, x0, step, iterations):
     plt.figure()
-    _, history_f1 = gradient_descent(grad_F, x0, step, iterations)
+    x1, history_f1 = gradient_descent(grad_F, x0, step, iterations)
     x2, history_f2 = gradient_descent(grad_F2, x0, step,  iterations, delta2=delta2)
     cost_F2 = [F2(x, delta2) for x in history_f2]
     cost_f = [F(x) for x in history_f1]
 
-    # plt.plot(cost_f, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    plt.plot(cost_f, linewidth=1.7, label="$F(x)$", color = "cadetblue")
     plt.plot(cost_F2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
-    # plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
-    plt.hlines( delta2 * np.linalg.norm(x2)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta_2 \cdot ||x||^2$', linewidth=thickness)
+    plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
+    # plt.hlines( delta2 * np.linalg.norm(x2)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta_2 \cdot ||x||^2$', linewidth=thickness)
+    plt.hlines(F2(x_svd, delta2), 0, iterations, colors='darkred', linestyles='dashed', label='$F_2(x^*)$ con $\delta_2 = 10^{-2} \cdot \sigma_{max}$', linewidth=thickness)
+    print("dif f2: ", F2(x_svd, delta2) - F2(x2, delta2))
+    print("dif f:", F(x_svd) - F(x1))
     
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de las funciones (esc log)', fontsize=15)
@@ -273,7 +276,7 @@ def main():
 
 
     max_iter = 1000
-    iterations = 1000
+    iterations = 10000
 
     sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
     sigma_max = np.max(sigma)
