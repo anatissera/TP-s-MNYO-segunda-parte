@@ -69,12 +69,13 @@ def plotF1():
     delta2 = delta * sigma_max
     plt.figure()
     _, history_f1, _ = gradient_descent(x0, iterations, step)
-    _, history_f2, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
+    x, history_f2, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
 
-    plt.plot(history_f1, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    # plt.plot(history_f1, linewidth=1.7, label="$F(x)$", color = "cadetblue")
     plt.plot(history_f2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
-    plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
-   
+    # plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
+    plt.hlines(delta2 * np.linalg.norm(x)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta^2 \cdot ||x_0||^2$', linewidth=thickness)
+    
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de las funciones (en escala logarítmica)', fontsize=15)
     plt.legend(fontsize=14)  # Increase the font size to make the legend box bigger
@@ -82,6 +83,8 @@ def plotF1():
     plt.title('Evolución de $F(x)$ y $F_2(x)$ por iteración', fontsize=20)
     plt.grid(False)
     plt.show()
+    
+
 
 def plotF2():
     # Grafico
