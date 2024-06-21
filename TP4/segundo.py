@@ -1,32 +1,65 @@
 import numpy as np
 import matplotlib.pyplot as plt
-np.random.seed(1428)
+
+# Generar matrices y vectores aleatorios
+np.random.seed(0)
 n = 5
 d = 100
 A = np.random.rand(n, d)
 b = np.random.rand(n)
-x0 = np.random.rand(d)
 
-iterations = 1000
+
+# # Configurations
+# n = 2  # Problem dimension
+# d = 2  # Parameter space dimension
+# iterations = 100
+# delta2 = 1e-2
+
+# # Random matrices and vectors generation
+# np.random.seed(0) 
+# A = np.random.randn(n, d)
+# b = np.random.randn(n)
+
+iterations = 2000
 
 sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
 sigma_max = np.max(sigma)
-lambda_max = 2 * sigma_max**2  # HF1(x) = 2 * A.T @ A
+
+# HF1(x) = 2 * A.T @ A
+lambda_max = 2 * sigma_max**2 # multiplico por 2 porque el hessiano es 2*(A.T @ A) y sigma es la raiz cuadrada de los autovalores de A.T @ A
+
+delta_constants = [0.001, 0.01, 0.1, 1, 10]  # Constante de regularización
+
 delta2 = 1e-2 * sigma_max
-step = 1 / lambda_max  # Paso de aprendizaje
+
+# Paso de aprendizaje
+step = 1 / lambda_max
+
 
 def F(x):
+    """Calcula la función de costo F(x) = (Ax - b)^T (Ax - b)."""
     return np.linalg.norm(A @ x - b)**2
 
-def F2(x, delta2):
-    return F(x) + delta2 * np.linalg.norm(x)**2
-
 def grad_F(x):
+    """Calcula el gradiente de F(x)."""
     return 2 * A.T @ (A @ x - b)
 
+def hessiano_F(A): # es la segunda derivada de F(x) porque depende de una sola variable
+    """Calcula el Hessiano de F(x)."""
+    return 2 * A.T @ A 
+
+# Función de costo F2(x) con regularización L2
+def F2(x, delta2):
+    """Calcula la función de costo F2(x) = F(x) + delta2 * ||x||^2.
+    """
+    return F(x) + delta2 * np.linalg.norm(x)**2
+
+# Gradiente de F2(x)
 def grad_F2(x, delta2):
+    """Calcula el gradiente de F2(x)."""
     return grad_F(x) + 2 * delta2 * x
 
+# Gradiente descendente
 def gradient_descent(grad_func, x0, step_size, max_iter, delta2=None):
     x = x0
     history = [x0]
@@ -38,6 +71,8 @@ def gradient_descent(grad_func, x0, step_size, max_iter, delta2=None):
         history.append(x)
     return x, np.array(history)
 
+
+
 def SVD(A, b):
     U, Sigma, VT = np.linalg.svd(A, full_matrices=False)
     x_svd = VT.T @ np.linalg.inv(np.diag(Sigma)) @ U.T @ b
@@ -45,18 +80,16 @@ def SVD(A, b):
 
 thickness = 2.5
 def plotF(x_svd, x0, step, iterations):
-    delta = 0.01
-    delta2 = delta * sigma_max
     plt.figure()
     _, history_f1 = gradient_descent(grad_F, x0, step, iterations)
-    x2, history_f2 = gradient_descent(grad_F2, x0, step, iterations, delta2=delta2)
+    x2, history_f2 = gradient_descent(grad_F2, x0, step,  iterations, delta2=delta2)
     cost_F2 = [F2(x, delta2) for x in history_f2]
     cost_f = [F(x) for x in history_f1]
 
-    # plt.plot(cost_f, linewidth=thickness, label="$F(x)$", color="cadetblue")
+    # plt.plot(cost_f, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    plt.plot(cost_F2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
     # plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
-    plt.plot(cost_F2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color="lightcoral")
-    plt.hlines(delta2 * np.linalg.norm(x2)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta_2 \cdot ||x||^2$', linewidth=thickness)
+    plt.hlines( delta2 * np.linalg.norm(x2)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta_2 \cdot ||x||^2$', linewidth=thickness)
     
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de las funciones (esc log)', fontsize=15)
@@ -74,7 +107,7 @@ def plot_costo_F2(x_svd, x0, step_size, max_iter, delta2_values, colors):
     plt.figure()
     for i, delta in enumerate(delta2_values):
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         cost_F2 = [F2(x, delta2) for x in history_F2]
         
         plt.plot(cost_F2, label=f'$F_2(x_k)$ con $\\delta_2={delta}$$\cdot \sigma_{{max}}$', color=colors[i])
@@ -93,7 +126,7 @@ def L2(x_svd, x0, step_size, max_iter, delta2_values, d=100, colors=['b', 'g', '
     plt.figure()
     for i, delta in enumerate(delta2_values):
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         cost_F2 = [F2(x, delta2) for x in history_F2]
         
         plt.scatter(np.arange(d), history_F2[-1], label=f'$\\delta_2={delta}$$\cdot \sigma_{{max}}$', color=colors[i], marker=markers[i], alpha = 0.9)
@@ -110,7 +143,7 @@ def sigma_L2(x0, step_size, max_iter, delta2_values):
     std_dev = []
     for delta in delta2_values:
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         std_dev.append(np.std(history_F2[-1]))
 
     plt.figure()
@@ -126,7 +159,7 @@ def norma_L2(x0, step_size, max_iter, delta2_values):
     norms = []
     for delta in delta2_values:
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         norms.append(np.linalg.norm(history_F2[-1]))
 
     plt.figure()
@@ -142,7 +175,7 @@ def singular_values(A, x0, step_size, max_iter, delta2_values, Sigma):
     sigma_evolution = np.zeros((max_iter + 1, len(Sigma)))
     for i, delta in enumerate(delta2_values):
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         for j in range(max_iter + 1):
             sigma_evolution[j, :] = np.linalg.svd(A @ history_F2[j].reshape(-1, 1), compute_uv=False)
 
@@ -161,7 +194,7 @@ def error_relativo(x_svd, x0, step_size, max_iter, delta2_values, colors= ['ligh
     errors = []
     for delta in delta2_values:
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         errors.append(np.linalg.norm(x_svd - history_F2[-1]) / np.linalg.norm(x_svd))
 
     history_F = gradient_descent(grad_F, x0, step_size, max_iter)
@@ -180,7 +213,7 @@ def calc_errors(x_svd, x0, step_size, max_iter, delta_constants):
     errores_absolutos = []
     for delta in delta_constants:
         delta2 = delta * sigma_max
-        history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
+        _, history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
         errors_relativos.append(np.linalg.norm(x_svd - history_F2[-1]) / np.linalg.norm(x_svd))
         errores_absolutos.append(np.abs(F2(history_F2[-1], delta2) - F2(x_svd, delta2)))
     
@@ -232,7 +265,7 @@ def main():
 
 
     # Parámetros del algoritmo
-
+    x0 = np.random.rand(d)
     
     # x0 = np.random.randn(d)
     # x0 = np.random.uniform(0, 1, d)
