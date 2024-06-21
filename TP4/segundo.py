@@ -8,6 +8,7 @@ d = 100
 A = np.random.rand(n, d)
 b = np.random.rand(n)
 
+
 # # Configurations
 # n = 2  # Problem dimension
 # d = 2  # Parameter space dimension
@@ -18,6 +19,22 @@ b = np.random.rand(n)
 # np.random.seed(0) 
 # A = np.random.randn(n, d)
 # b = np.random.randn(n)
+
+iterations = 1000
+
+sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
+sigma_max = np.max(sigma)
+
+# HF1(x) = 2 * A.T @ A
+lambda_max = 2 * sigma_max**2 # multiplico por 2 porque el hessiano es 2*(A.T @ A) y sigma es la raiz cuadrada de los autovalores de A.T @ A
+
+delta_constants = [0.001, 0.01, 0.1, 1, 10]  # Constante de regularización
+
+delta2 = 1e-2 * sigma_max
+
+# Paso de aprendizaje
+step = 1 / lambda_max
+
 
 def F(x):
     """Calcula la función de costo F(x) = (Ax - b)^T (Ax - b)."""
@@ -61,12 +78,37 @@ def SVD(A, b):
     x_svd = VT.T @ np.linalg.inv(np.diag(Sigma)) @ U.T @ b
     return x_svd
 
+thickness = 2.5
+def plotF(x_svd, x0, step, iterations):
+    delta = 0.01
+    delta2 = delta * sigma_max
+    plt.figure()
+    history_f1 = gradient_descent(grad_F, x0, step, iterations)
+    history_f2 = gradient_descent(grad_F2, x0, step,  iterations, delta2=delta2)
+    cost_F2 = [F2(x, delta2 * sigma_max) for x in history_f2]
+    cost_f = [F(x) for x in history_f1]
+
+    plt.plot(cost_f, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    plt.plot(cost_F2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
+    plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
+   
+    plt.xlabel('Iteraciones', fontsize=15)
+    plt.ylabel('Valor de las funciones (en escala logarítmica)', fontsize=15)
+    plt.legend(fontsize=14)  # Increase the font size to make the legend box bigger
+    plt.yscale('log')
+    plt.title('Evolución de $F(x)$ y $F_2(x)$ por iteración', fontsize=20)
+    plt.grid(False)
+    plt.show()
+
+
+
+
 def plot_costo_F2(x_svd, x0, step_size, max_iter, delta2_values, colors):
   
     plt.figure()
     for i, delta2 in enumerate(delta2_values):
         history_F2 = gradient_descent(grad_F2, x0, step_size, max_iter, delta2)
-        cost_F2 = [F2(x, delta2) for x in history_F2]
+        cost_F2 = [F2(x, delta2 * sigma_max) for x in history_F2]
         
         plt.plot(cost_F2, label=f'$F_2(x_k)$ con $\\delta_2={delta2}$', color=colors[i])
         # plt.axhline(y=F2(x_svd, delta2), color=colors[i], linestyle='--', label=f'$F_2(x^*)$ con $\\delta_2={delta2}$')
@@ -164,30 +206,41 @@ def main():
 
     # Parámetros del algoritmo
     x0 = np.random.rand(d)
+    
+    # x0 = np.random.randn(d)
+    # x0 = np.random.uniform(0, 1, d)
+
+
+
     max_iter = 1000
-    lambda_max = np.max(np.linalg.eigvals(2 * A.T @ A).real)
+    iterations = 1000
+
+    sigma = np.linalg.svd(A, full_matrices=False, compute_uv=False)
+    sigma_max = np.max(sigma)
+
+    # HF1(x) = 2 * A.T @ A
+    lambda_max = 2 * sigma_max**2 # multiplico por 2 porque el hessiano es 2*(A.T @ A) y sigma es la raiz cuadrada de los autovalores de A.T @ A
+
+    delta_constants = [0.001, 0.01, 0.1, 1, 10]  # Constante de regularización
+
+    delta2 = 1e-2 * sigma_max
+
+    # Paso de aprendizaje
     step_size = 1 / lambda_max
-
+    
     x_svd = SVD(A, b)
-
-    # Parámetros de regularización
-    delta2_values = [0.01, 0.1, 1, 10, 100]
     
-    # me falta delta2 que son los valores singulares de A para hacer delta2 = const_delta(lo que iteras en la lista) * sigma_max
-    delta2 = 1e-5 * np.max(np.linalg.svd(A, full_matrices=False, compute_uv=False))
-    # delta2 = 1e-5 * np.linalg.norm(A, 2)
-    # ??
-    
+    plotF(x_svd, x0, step, iterations)
     # Gráficos para diferentes valores de delta2
     colors = ['lightcoral', 'peachpuff', 'seagreen', 'cadetblue', 'midnightblue']
     markers = ['o', 's', 'd', 'x', '+']
 
-    plot_costo_F2(x_svd, x0, step_size, max_iter, delta2_values, colors)
-    L2(x_svd, x0, step_size, max_iter, delta2_values, d, colors, markers)
-    sigma_L2(x0, step_size, max_iter, delta2_values)
-    norma_L2(x0, step_size, max_iter, delta2_values)
-    singular_values(A, x0, step_size, max_iter, delta2_values, np.linalg.svd(A, full_matrices=False)[1])
-    error_relativo(x_svd, x0, step_size, max_iter, delta2_values)
+    plot_costo_F2(x_svd, x0, step_size, max_iter, delta_constants, colors)
+    L2(x_svd, x0, step_size, max_iter, delta_constants, d, colors, markers)
+    sigma_L2(x0, step_size, max_iter, delta_constants)
+    norma_L2(x0, step_size, max_iter, delta_constants)
+    singular_values(A, x0, step_size, max_iter, delta_constants, np.linalg.svd(A, full_matrices=False)[1])
+    error_relativo(x_svd, x0, step_size, max_iter, delta_constants)
     
 if __name__ == '__main__':
     main()
