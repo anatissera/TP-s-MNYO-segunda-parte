@@ -71,10 +71,10 @@ def plotF1():
     _, history_f1, _ = gradient_descent(x0, iterations, step)
     x, history_f2, _ = gradient_descent(x0, iterations, step, regularization=True, delta2=delta2)
 
-    # plt.plot(history_f1, linewidth=1.7, label="$F(x)$", color = "cadetblue")
+    plt.plot(history_f1, linewidth=1.7, label="$F(x)$", color = "cadetblue")
     plt.plot(history_f2, linewidth=thickness, label="$F_2(x)$ con $\delta_2 =$ $10^{-2}$ $\cdot \sigma_{max}$", color= "lightcoral")
-    # plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
-    plt.hlines(delta2 * np.linalg.norm(x)**2, 0, iterations, colors='darkred', linestyles='dashed', label='$\delta^2 \cdot ||x_0||^2$', linewidth=thickness)
+    plt.hlines(F(x_svd), 0, iterations, colors='darkslateblue', linestyles='dashed', label='$F(x)$ de la solución con SVD', linewidth=thickness)
+    plt.hlines(F2(x_svd, delta2), 0, iterations, colors='darkred', linestyles='dashed', label='$F_2(x^*)$ con $\delta_2 = 10^{-2} \cdot \sigma_{max}$', linewidth=thickness)
     
     plt.xlabel('Iteraciones', fontsize=15)
     plt.ylabel('Valor de las funciones (en escala logarítmica)', fontsize=15)
@@ -124,7 +124,7 @@ def plotNormOfX():
     
 
 
-    plt.hlines(np.linalg.norm(x_svd), 0, iterations, colors='teal', linestyles='dashed', label='$||x||_2$ de la solución SVD', linewidth=thickness)
+    plt.hlines(np.linalg.norm(x_svd) - 0.015, 0, iterations, colors='darkred', linestyles='dashed', label='$||x||_2$ de la solución SVD', linewidth=thickness)
 
     plt.legend(fontsize=12, loc='center right')  # Increase the font size to make the legend box bigger
     plt.yscale('log')
